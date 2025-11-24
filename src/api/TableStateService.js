@@ -1,9 +1,9 @@
 import axios from "axios"
-import { getDomain, getPrefixApi } from "../helpers/router";
+import { getApiRoute } from "../helpers/router";
 
 export default class TableStateService {
 
     static getTableStateSSE(tableId) {
-        return new EventSource(getDomain() + getPrefixApi() + 'table-state/' + tableId);
+        return new EventSource(getApiRoute('table-state/' + tableId));
     }
 }

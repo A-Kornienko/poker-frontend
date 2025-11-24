@@ -1,9 +1,10 @@
 import axios from "axios"
-import { getDomain, getPrefixApi } from "../helpers/router";
+import { getApiRoute } from "../helpers/router";
 
 export default class CashTablesService {
     static async getTableList(limit = 10, page = 1) {
-        const response = await axios.get(getDomain() + getPrefixApi() + 'cash-tables', {
+        const response = await axios.get(getApiRoute('cash-tables'), 
+        {
             params: {
                 limit: limit,
                 page: page
@@ -14,22 +15,19 @@ export default class CashTablesService {
     }
 
     static async getPlayersInfo(settingId) {
-        const response = await axios.get(getDomain() + getPrefixApi() + 
-        'cash-tables/' + settingId + '/players')
+        const response = await axios.get(getApiRoute('cash-tables/' + settingId + '/players'))
 
         return response
     }
 
     static async getSettingDetails(settingId) {
-        const response = await axios.get(getDomain() + getPrefixApi() + 
-        'cash-tables/' + settingId)
+        const response = await axios.get(getApiRoute('cash-tables/' + settingId))
 
         return response
     }
 
     static async connectToTable(settingId) {
-        const response = await axios.post(getDomain() + getPrefixApi() + 
-        'cash-tables/' + settingId + '/connect')
+        const response = await axios.post(getApiRoute('cash-tables/' + settingId + '/connect'))
 
         return response
     }

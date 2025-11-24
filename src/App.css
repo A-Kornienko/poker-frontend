@@ -18,9 +18,9 @@
     font-size: 14px;
 }
 
-/* 56px = height for TopBar */
+/* 50px = height for TopBar */
 :root {
-  --topbar-height: 56px;
+  --topbar-height: 50px;
 }
 .h-vh-fullScreen {
   height: calc(100vh - var(--topbar-height));

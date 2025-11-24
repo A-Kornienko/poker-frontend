@@ -1,11 +1,13 @@
 import React from "react";
 import { Routes, Route } from "react-router-dom";
-import { publicRoute } from "../router/Router";
+
+import { publicRoutes, privateRoutes } from "../router/Router"; 
+import ProtectedRoute from "../components/ProtectedRoutes/ProtectedRoute"; 
 
 const AppRouter = () => {
   return (
     <Routes>
-      {publicRoute.map((route) => (
+      {publicRoutes.map((route) => (
         <Route
           path={route.path}
           Component={route.component}
@@ -13,6 +15,17 @@ const AppRouter = () => {
           key={route.path}
         />
       ))}
+
+      <Route element={<ProtectedRoute />}>
+        {privateRoutes.map((route) => (
+          <Route
+            path={route.path}
+            Component={route.component}
+            exact={route.exact}
+            key={route.path}
+          />
+        ))}
+      </Route>
     </Routes>
   );
 };

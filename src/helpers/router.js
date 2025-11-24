@@ -1,11 +1,11 @@
-export const getDomain = () => {
-    return 'http://localhost'
+const getDomain = () => {
+    return 'http://poker.test'
 }
 
-export const getPrefix = () => {
-    return '/poker2/'
+const getPrefixApi = () => {
+    return '/api/'
 }
 
-export const getPrefixApi = () => {
-    return '/poker2/api/'
+export const getApiRoute = (route) => {
+    return getDomain() + getPrefixApi() + route
 }

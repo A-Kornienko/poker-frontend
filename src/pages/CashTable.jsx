@@ -101,6 +101,7 @@ const CashTable = () => {
 
   return (
     <>
+      {/* errors messages */}
       <div className="flex bg-zinc-900 h-vh-fullScreen w-screen relative overflow-hidden ">
         {errors.map((err, idx) => (
           <div key={idx} style={{ marginBottom: "0.75rem" }}>
@@ -108,6 +109,7 @@ const CashTable = () => {
           </div>
         ))}
 
+        {/* Loader */}
         {isTableConnectLoading && (
           <div className="absolute w-full h-vh-fullScreen bg-black opacity-50 ">
             <div className="absolute top-1/4 left-1/2">
@@ -115,6 +117,7 @@ const CashTable = () => {
             </div>
           </div>
         )}
+
         <CashTableList
           tables={tables}
           isTablesLoading={isTablesLoading}
