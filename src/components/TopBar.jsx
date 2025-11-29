@@ -34,8 +34,9 @@ const TopBar = () => {
   });
 
   const actionLogout = () => {
-    fetchLogout(); // Deletes Cookies and calls API
-    contextLogout(); // Updates the state of authContext
+    fetchLogout(); 
+    contextLogout(); // Deletes the state of authContext
+    clearAuthTokens(); // Deletes Cookies and calls API
     setIsOpen(false);
     navigate("/login");
   };

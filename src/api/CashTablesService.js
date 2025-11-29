@@ -1,5 +1,6 @@
 import axios from "axios"
 import { getApiRoute } from "../helpers/router";
+import AxiosApiInstance from './AxiosInstans/AxiosApiInstance';
 
 export default class CashTablesService {
     static async getTableList(limit = 10, page = 1) {
@@ -27,7 +28,8 @@ export default class CashTablesService {
     }
 
     static async connectToTable(settingId) {
-        const response = await axios.post(getApiRoute('cash-tables/' + settingId + '/connect'))
+
+        const response = await AxiosApiInstance.post(getApiRoute('cash-tables/' + settingId + '/connect'))
 
         return response
     }

@@ -4,15 +4,17 @@ import CashTableSidebar from "../components/CashTableSidebar";
 import { useFetching } from "../hooks/useFetching";
 import CashTablesService from "../api/CashTablesService";
 import Loader from "../components/UI/Loader/Loader";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import ErrorMessage from "../components/UI/ErrorMessage";
 
 const CashTable = () => {
   const navigate = useNavigate();
 
   const [tables, setTables] = useState({ items: [] });
-  const [limit, setLimit] = useState(10);
-  const [page, setPage] = useState(1);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const limit = parseInt(searchParams.get("limit")) || 10;
+  const page = parseInt(searchParams.get("page")) || 1;
+  const[serverErrorsMessage, setServerErrorsMessage] = useState('')
 
   const [fetchTables, isTablesLoading, tableError] = useFetching(
     async (limit, page) => {
@@ -25,9 +27,15 @@ const CashTable = () => {
     fetchTables(limit, page);
   }, [page, limit]);
 
+  // use for future pagination component
+  // page change
+  const setPageHandler = (newPage) => {
+    setSearchParams({ page: newPage, limit });
+  };
+
   const [playersInfo, setPlayersInfo] = useState([]);
   const [isTableInfo, setIsTableInfo] = useState(false);
-  const [fetchPlayersInfo, isPlayersInfoLoading, PlayersInfoError] =
+  const [fetchPlayersInfo, isPlayersInfoLoading, playersInfoError] =
     useFetching(async (settingId) => {
       const response = await CashTablesService.getPlayersInfo(settingId);
       const { isAuthorized, ...players } = response.data.data || [];
@@ -49,7 +57,7 @@ const CashTable = () => {
   const [settingDetails, setSettingDetails] = useState({});
   const [isSettingDetails, setIsSettingDetails] = useState(false);
 
-  const [fetchSettingDetails, isSettingDetailsLoading, SettingDetailsError] =
+  const [fetchSettingDetails, isSettingDetailsLoading, settingDetailsError] =
     useFetching(async (settingId) => {
       const response = await CashTablesService.getSettingDetails(settingId);
       setSettingDetails({ ...response.data.data });
@@ -57,28 +65,31 @@ const CashTable = () => {
 
   const getSettingDetails = () => {
     setSettingDetails({});
-    settingDetailsVisibility();
 
-    if (!isSettingDetails) {
-      fetchSettingDetails(currentSettingId);
-    }
+    setIsSettingDetails((prev) => {
+      const newVisibility = !prev;
+      if (newVisibility) {
+        fetchSettingDetails(currentSettingId);
+      }
+      return newVisibility;
+    });
   };
 
-  const [fetchTableConnect, isTableConnectLoading, TableConnectError] =
+  const [fetchTableConnect, isTableConnectLoading, tableConnectError] =
     useFetching(async (settingId) => {
-      const response = await CashTablesService.connectToTable(settingId);
 
-      if (response.data.success) {
-        navigate("/poker-table/" + settingId);
-      }
+        setServerErrorsMessage('')
+        const response = await CashTablesService.connectToTable(settingId);
+
+        if (response.data.success) {
+          navigate("/poker-table/" + settingId);
+        }
+
+        setServerErrorsMessage(response.data.error)
     });
 
   const joinToTable = (settingId) => {
     fetchTableConnect(settingId);
-  };
-
-  const settingDetailsVisibility = () => {
-    isSettingDetails ? setIsSettingDetails(false) : setIsSettingDetails(true);
   };
 
   const clearSidebar = () => {
@@ -92,18 +103,19 @@ const CashTable = () => {
     setSelectedRowId(null);
   };
 
-  const errors = [
-    tableError,
-    PlayersInfoError,
-    SettingDetailsError,
-    TableConnectError,
+  const errorMessages  = [
+    tableError?.message, 
+    playersInfoError?.message, 
+    settingDetailsError?.message, 
+    tableConnectError?.message,
+    serverErrorsMessage
   ].filter(Boolean);
 
   return (
     <>
       {/* errors messages */}
       <div className="flex bg-zinc-900 h-vh-fullScreen w-screen relative overflow-hidden ">
-        {errors.map((err, idx) => (
+        {errorMessages.map((err, idx) => (
           <div key={idx} style={{ marginBottom: "0.75rem" }}>
             <ErrorMessage message={err} />
           </div>

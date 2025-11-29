@@ -1,10 +1,11 @@
 import axios from 'axios';
 import Cookies from 'js-cookie';
-import { getApiRoute } from '../helpers/router';
-import { useNavigate } from "react-router-dom";
-import { clearAuthTokens } from '../helpers/authUtils';
+import { getApiRoute } from '../../helpers/router';
+import { clearAuthTokens } from '../../helpers/authUtils';
 
-const AxiosApiInstance = axios.create();
+const AxiosApiInstance = axios.create({
+  // withCredentials: true, 
+});
 
 let isRefreshing = false;
 let failedQueue: Array<{ resolve: (value: any) => void; reject: (reason?: any) => void }> = [];
@@ -29,10 +30,11 @@ AxiosApiInstance.interceptors.request.use(config => {
 AxiosApiInstance.interceptors.response.use(
   response => response,
   async error => {
+    
     const originalRequest = error.config;
-    const navigate = useNavigate();
 
     if (error.response?.status === 401 && !originalRequest._retry) {
+
       if (isRefreshing) {
         return new Promise((resolve, reject) => {
           failedQueue.push({ resolve, reject });
@@ -49,13 +51,12 @@ AxiosApiInstance.interceptors.response.use(
 
       try {
         const refreshToken = Cookies.get('refresh_token');
-        if (!refreshToken) navigate("/login");;
 
         // this request should also go through AxiosApiInstance (or at least withCredentials)
         const refreshResponse = await axios.post(
           getApiRoute('token/refresh'),
           { refresh_token: refreshToken },
-          { withCredentials: true } // so that the refresh_token cookie is sent
+          // { withCredentials: true } // so that the refresh_token cookie is sent
         );
 
         const { token: newAccessToken, refresh_token: newRefreshToken } = refreshResponse.data;
@@ -76,13 +77,17 @@ AxiosApiInstance.interceptors.response.use(
         clearAuthTokens()
         processQueue(refreshError, null);
 
-        // Logout the user
-        
-        navigate("/login");
         return Promise.reject(refreshError);
       } finally {
         isRefreshing = false;
       }
+    }
+
+    // Add 403 Forbidden handling
+    if (error.response?.status === 403) {
+        console.error("403 Forbidden: User authenticated but has no permission.");
+        // Possibly redirect to "Access Denied" page
+        // window.location.href = '/access-denied';
     }
 
     return Promise.reject(error);
