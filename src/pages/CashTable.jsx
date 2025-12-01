@@ -76,10 +76,10 @@ const CashTable = () => {
   };
 
   const [fetchTableConnect, isTableConnectLoading, tableConnectError] =
-    useFetching(async (settingId) => {
+    useFetching(async (settingId, stack) => {
 
         setServerErrorsMessage('')
-        const response = await CashTablesService.connectToTable(settingId);
+        const response = await CashTablesService.connectToTable(settingId, stack);
 
         if (response.data.success) {
           navigate("/poker-table/" + settingId);
@@ -88,8 +88,8 @@ const CashTable = () => {
         setServerErrorsMessage(response.data.error)
     });
 
-  const joinToTable = (settingId) => {
-    fetchTableConnect(settingId);
+  const joinToTable = (settingId, stack) => {
+    fetchTableConnect(settingId, stack);
   };
 
   const clearSidebar = () => {

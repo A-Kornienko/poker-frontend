@@ -27,9 +27,13 @@ export default class CashTablesService {
         return response
     }
 
-    static async connectToTable(settingId) {
+    static async connectToTable(settingId, stack) {
 
-        const response = await AxiosApiInstance.post(getApiRoute('cash-tables/' + settingId + '/connect'))
+        const response = await AxiosApiInstance.post(getApiRoute('cash-tables/' + settingId + '/connect'),
+        {
+            stack: stack
+        }
+    )
 
         return response
     }
