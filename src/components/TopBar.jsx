@@ -4,6 +4,7 @@ import { useAuth } from "../context/AuthContext";
 import { useFetching } from "../hooks/useFetching";
 import { useNavigate } from "react-router-dom";
 import Loader from "../components/UI/Loader/Loader";
+import { clearAuthTokens } from '../helpers/authUtils';
 
 const TopBar = () => {
   const navigate = useNavigate();

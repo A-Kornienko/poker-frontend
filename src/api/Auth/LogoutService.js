@@ -1,7 +1,6 @@
 import Cookies from 'js-cookie';
 import AxiosApiInstance from '../AxiosInstans/AxiosApiInstance';
 import { getApiRoute } from '../../helpers/router';
-import { clearAuthTokens } from '../../helpers/authUtils'; // Ваша нова утиліта
 
 /**
  * Performs logout operation by invalidating the refresh token on the server 

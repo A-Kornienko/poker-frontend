@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { useFetching } from "../hooks/useFetching";
 import BetService from "../api/BetService";
 import TableStateService from "../api/TableStateService";
@@ -11,6 +11,9 @@ import BetControls from "./BetControls";
 import ErrorMessage from "./UI/ErrorMessage";
 import BlindChip from "./BlindChip";
 import ChipsBlock from "./ChipsBlock";
+import UserService from "../api/Auth/UserService";
+import { useAuth } from "../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 
 // Improved player and chip positioning
 type GridAreaType = "player" | "blindChip" | "betChip";
@@ -67,6 +70,7 @@ interface PokerTableProps {
  * @returns {JSX.Element} Poker Game
  */
 export default function PokerTable({ tableId }: PokerTableProps) {
+  const navigate = useNavigate();
   // Initial state of the table
   const [data, setData] = useState<TableData>({
     id: 5,
@@ -114,6 +118,7 @@ export default function PokerTable({ tableId }: PokerTableProps) {
   const [betAmount, setBetAmount] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
   const [totalTime, setTotalTime] = useState(0);
+  const { logout: contextLogout } = useAuth();
 
   // API bid processing
   const [fetchAction, isActionLoading, actionError] = useFetching(
@@ -144,46 +149,83 @@ export default function PokerTable({ tableId }: PokerTableProps) {
   const minBet = data.betRange?.min || 0;
   const maxBet = data.betRange?.max || 0;
 
-  // Handle SSE updates for real-time table state changes
+  const handleMessage = useCallback((event: MessageEvent) => {
+    const newData: TableData = JSON.parse(event.data);
+
+    console.log("newData", newData);
+
+    setData((prevData) => {
+      // Merge previous data with new data
+      const updatedData = { ...(prevData || {}), ...newData };
+
+      // Update banks separately to trigger animations
+      if (JSON.stringify(newData.banks) !== JSON.stringify(prevData?.banks)) {
+        setBanks(newData.banks);
+      }
+      return updatedData;
+    });
+  }, []);
+
+  // SSE connection with token
   useEffect(() => {
     if (!tableId) {
       console.error("tableId is missing");
       return;
     }
 
-    const eventSource = TableStateService.getTableStateSSE(tableId);
+    let eventSource: EventSource;
+    let reconnectTimeout: NodeJS.Timeout;
 
-    const handleMessage = (event: MessageEvent) => {
-      const newData: TableData = JSON.parse(event.data);
+    const connectSSE = async () => {
+      console.log("Attempting to connect to SSE...");
 
-      console.log("newData", newData);
+      try {
+        // Initializing connection
+        eventSource = TableStateService.getTableStateSSE(tableId);
 
-      setData((prevData) => {
-        const updatedData = { ...prevData, ...newData };
-        if (JSON.stringify(newData.banks) !== JSON.stringify(prevData.banks)) {
-          setBanks(newData.banks);
-        }
-        return updatedData;
-      });
+        // 2. Message handler
+        eventSource.onmessage = handleMessage;
+
+        // 3. Error handler with token refresh logic
+        eventSource.onerror = async (error) => {
+          console.error("SSE Error detected:", error);
+          eventSource.close();
+          clearTimeout(reconnectTimeout);
+
+          try {
+            // refresh token via Axios interceptor
+            await UserService.getUser();
+
+            console.log("Token refreshed via Axios. Reconnecting SSE shortly...");
+
+            reconnectTimeout = setTimeout(connectSSE, 100); // Reconnect shortly after token refresh
+          } catch (axiosError) {
+            // if token refresh fails (e.g., invalid refresh_token)
+            console.error("Failed to refresh token. User must log in.");
+            contextLogout(); // delete auth context
+            navigate("/login"); // Redirect to login
+          }
+        };
+      } catch (error) {
+        console.error("Initial SSE connection failed:", error);
+        // Retry connection after 5 seconds
+        reconnectTimeout = setTimeout(connectSSE, 5000);
+      }
     };
 
-    eventSource.onmessage = handleMessage;
-    eventSource.onerror = (error) => {
-      console.error("SSE Error:", error);
-      eventSource.close();
-    };
+    connectSSE(); // Start the connection
 
+    // Cleanup on unmount
     return () => {
-      eventSource.close();
-      console.log("SSE connection closed.");
-      setTimeout(() => {
-        // Reconnect after 5 seconds
-        const newEventSource = TableStateService.getTableStateSSE(tableId);
-        newEventSource.onmessage = handleMessage;
-        newEventSource.onerror = eventSource.onerror;
-      }, 5000);
+      if (eventSource) {
+        eventSource.close();
+        console.log("SSE connection closed.");
+      }
+      if (reconnectTimeout) {
+        clearTimeout(reconnectTimeout);
+      }
     };
-  }, [tableId]);
+  }, [tableId, handleMessage]);
 
   // Bank animation
   useEffect(() => {
@@ -260,7 +302,7 @@ export default function PokerTable({ tableId }: PokerTableProps) {
       <>
         {/* Player Chips */}
         <div
-          key={place}
+          key={place + "_chips"}
           className="absolute place-self-center z-30"
           style={{ gridArea: getGridArea(Number(place), "betChip") }}
         >
@@ -274,7 +316,7 @@ export default function PokerTable({ tableId }: PokerTableProps) {
           )}
         </div>
         <div
-          key={place}
+          key={place + "_player"}
           className="absolute place-self-center z-20"
           style={{ gridArea: getGridArea(Number(place), "player") }}
         >

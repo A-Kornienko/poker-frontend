@@ -1,4 +1,3 @@
-import axios from "axios"
 import { getApiRoute } from "../helpers/router";
 import AxiosApiInstance from './AxiosInstans/AxiosApiInstance';
 
