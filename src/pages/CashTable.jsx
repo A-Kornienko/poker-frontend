@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import { useState, useEffect } from "react";
 import CashTableList from "../components/CashTableList";
 import CashTableSidebar from "../components/CashTableSidebar";
 import { useFetching } from "../hooks/useFetching";
@@ -113,10 +113,10 @@ const CashTable = () => {
 
   return (
     <>
-      {/* errors messages */}
       <div className="flex bg-zinc-900 h-vh-fullScreen w-screen relative overflow-hidden ">
+        {/* errors messages */}
         {errorMessages.map((err, idx) => (
-          <div key={idx} style={{ marginBottom: "0.75rem" }}>
+          <div key={idx}>
             <ErrorMessage message={err} />
           </div>
         ))}

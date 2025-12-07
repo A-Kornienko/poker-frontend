@@ -1,5 +1,6 @@
-import React, { memo } from "react";
+import { memo } from "react";
 import { TableData } from "../types/poker";
+import Loader from "../components/UI/Loader/Loader";
 
 interface BetNavigationItem {
   label: string;
@@ -15,6 +16,7 @@ interface BetControlsProps {
   onAction: (action: string) => void;
   onChangeBet: (value: number | string) => void;
   onPercentBet: (percent: number) => void;
+  isLoading?: boolean;
 }
 
 /**
@@ -30,6 +32,7 @@ const BetControls = memo(
     onAction,
     onChangeBet,
     onPercentBet,
+    isLoading = false,
   }: BetControlsProps) => {
     // Configuration of betting navigation buttons
     const betNavigation: BetNavigationItem[] = [
@@ -64,78 +67,97 @@ const BetControls = memo(
     );
 
     return (
-      <div className="fixed bottom-4 right-4 w-full max-w-xs p-4 bg-zinc-700 rounded-lg shadow-lg space-y-3 md:max-w-sm">
-        {/* Controls for entering the bet amount */}
-        <div className="flex items-center gap-2">
-          <input
-            type="number"
-            value={betAmount}
-            min={minBet}
-            max={maxBet}
-            onChange={(e) => onChangeBet(e.target.value)}
-            className="w-16 rounded-lg border-gray-300 text-center text-black"
-            aria-label="Bet amount"
-          />
-          <button
-            onClick={() => onChangeBet(betAmount - 1)}
-            className="px-3 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-400"
-            aria-label="Decrease bet"
-          >
-            –
-          </button>
-          <input
-            type="range"
-            min={minBet}
-            max={maxBet}
-            value={betAmount}
-            onChange={(e) => onChangeBet(e.target.value)}
-            className="flex-1 accent-blue-500"
-            aria-label="Bet range slider"
-          />
-          <button
-            onClick={() => onChangeBet(betAmount + 1)}
-            className="px-3 py-2 bg-gray-500 text-white rounded-lg hover:bg-gray-400"
-            aria-label="Increase bet"
-          >
-            +
-          </button>
-        </div>
-
-        {/* Buttons for selecting the percentage rate and All-in */}
-        <div className="flex gap-2">
-          {[20, 40, 60].map((percent) => (
+      <>
+        <div
+          className={`fixed bottom-4 right-4 w-full max-w-2xs p-4 bg-zinc-700 rounded-lg shadow-lg space-y-3 md:max-w-xs
+        ${isLoading ? "opacity-50" : "opacity-100"}`}
+        >
+          {/* Loader */}
+          {isLoading && (
+            <div className="absolute inset-0 bg-black opacity-50 z-20 flex items-center justify-center rounded-lg">
+              <Loader />
+            </div>
+          )}
+          
+          {/* Controls for entering the bet amount */}
+          <div className="flex items-center gap-2">
+            <input
+              type="number"
+              disabled={isLoading}
+              value={betAmount}
+              min={minBet}
+              max={maxBet}
+              onChange={(e) => onChangeBet(e.target.value)}
+              className="w-16 rounded-lg border-gray-300 text-center text-black"
+              aria-label="Bet amount"
+            />
             <button
-              key={percent}
-              onClick={() => onPercentBet(percent)}
-              className="px-4 py-2 rounded-lg bg-gray-500 text-white hover:bg-gray-400 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-600"
-              aria-label={`Set bet to ${percent}% of max`}
+              onClick={() => onChangeBet(betAmount - 1)}
+              disabled={isLoading}
+              className="px-2 bg-gray-500 text-white rounded-lg hover:bg-gray-400"
+              aria-label="Decrease bet"
             >
-              {percent}%
+              –
             </button>
-          ))}
-          <button
-            onClick={() => onChangeBet(maxBet)}
-            className="flex-1 px-4 py-2 rounded-lg bg-red-500 text-white font-bold hover:bg-gray-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-gray-700"
-            aria-label="Go all-in"
-          >
-            All-in
-          </button>
-        </div>
-
-        {/* Action buttons (Fold, Check/Call, Raise) */}
-        <div className="flex gap-2">
-          {betNavigationFiltered.map((btn) => (
+            <input
+              type="range"
+              disabled={isLoading}
+              min={minBet}
+              max={maxBet}
+              value={betAmount}
+              onChange={(e) => onChangeBet(e.target.value)}
+              className="flex-1 accent-blue-500"
+              aria-label="Bet range slider"
+            />
             <button
-              key={btn.action}
-              onClick={() => onAction(btn.action)}
-              className={`flex-1 py-3 rounded-lg font-semibold active:translate-y-0.5 transition transform focus:outline-none focus:ring-2 focus:ring-offset-2 ${btn.classes}`}
-              aria-label={btn.label}
+              onClick={() => onChangeBet(betAmount + 1)}
+              disabled={isLoading}
+              className="px-2 bg-gray-500 text-white rounded-lg hover:bg-gray-400"
+              aria-label="Increase bet"
             >
-              {btn.label}
+              +
             </button>
-          ))}
+          </div>
+
+          {/* Buttons for selecting the percentage rate and All-in */}
+          <div className="flex gap-2">
+            {[20, 40, 60].map((percent) => (
+              <button
+                key={percent}
+                onClick={() => onPercentBet(percent)}
+                disabled={isLoading}
+                className="px-2 py-1 rounded-lg bg-gray-500 text-white hover:bg-gray-400"
+                aria-label={`Set bet to ${percent}% of max`}
+              >
+                {percent}%
+              </button>
+            ))}
+            <button
+              onClick={() => onChangeBet(maxBet)}
+              disabled={isLoading}
+              className="flex-1 px-2 py-1 rounded-lg bg-red-500 text-white font-bold hover:bg-gray-600"
+              aria-label="Go all-in"
+            >
+              All-in
+            </button>
+          </div>
+
+          {/* Action buttons (Fold, Check/Call, Raise) */}
+          <div className="flex gap-2">
+            {betNavigationFiltered.map((btn) => (
+              <button
+                key={btn.action}
+                disabled={isLoading}
+                onClick={() => onAction(btn.action)}
+                className={`flex-1 py-1 rounded-lg font-semibold active:translate-y-0.5 transition transform ${btn.classes}`}
+                aria-label={btn.label}
+              >
+                {btn.label}
+              </button>
+            ))}
+          </div>
         </div>
-      </div>
+      </>
     );
   }
 );

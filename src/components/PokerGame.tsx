@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useCallback } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { useFetching } from "../hooks/useFetching";
 import BetService from "../api/BetService";
 import TableStateService from "../api/TableStateService";
@@ -14,6 +14,10 @@ import ChipsBlock from "./ChipsBlock";
 import UserService from "../api/Auth/UserService";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
+import RebuyModal from "../components/Modals/RebuyModal";
+import RebuyService from "../api/RebuyService";
+import CashTablesService from "../api/CashTablesService";
+import Loader from "../components/UI/Loader/Loader";
 
 // Improved player and chip positioning
 type GridAreaType = "player" | "blindChip" | "betChip";
@@ -71,6 +75,7 @@ interface PokerTableProps {
  */
 export default function PokerTable({ tableId }: PokerTableProps) {
   const navigate = useNavigate();
+  const { logout: contextLogout } = useAuth();
   // Initial state of the table
   const [data, setData] = useState<TableData>({
     id: 5,
@@ -118,12 +123,42 @@ export default function PokerTable({ tableId }: PokerTableProps) {
   const [betAmount, setBetAmount] = useState(0);
   const [timeLeft, setTimeLeft] = useState(0);
   const [totalTime, setTotalTime] = useState(0);
-  const { logout: contextLogout } = useAuth();
+  const [stateModalRebuy, setStateModalRebuy] = useState(false);
+  const [rebuyErrorsMessage, setRebuyErrorsMessage] = useState("");
+  const [LeaveTableErrorsMessage, setLeaveTableErrorsMessage] = useState("");
+  const [isLoadingInitialData, setIsLoadingInitialData] = useState(true);
+  const initialDataLoaded = useRef(false);
+  const eventSourceRef = useRef<EventSource | null>(null);
 
   // API bid processing
   const [fetchAction, isActionLoading, actionError] = useFetching(
     async (tableId: number, action: string, betAmount: number) => {
       await BetService.bet(tableId, action, betAmount);
+    }
+  );
+
+  const [fetchRebuy, isRebuyLoading, rebuyError] = useFetching(
+    async (tableId, chips) => {
+      setRebuyErrorsMessage("");
+      const response = await RebuyService.rebuy(tableId, chips);
+
+      setStateModalRebuy(false);
+      if (!response.data.success) {
+        setRebuyErrorsMessage(response.data.error);
+      }
+    }
+  );
+
+  const [fetchLeaveTable, isLeaveTableLoading, LeaveTableError] = useFetching(
+    async (tableId) => {
+      setLeaveTableErrorsMessage("");
+      const response = await CashTablesService.leaveTable(tableId);
+
+      if (!response.data.success) {
+        setLeaveTableErrorsMessage(response.data.error);
+      }
+
+      navigate("/cash-table");
     }
   );
 
@@ -152,17 +187,23 @@ export default function PokerTable({ tableId }: PokerTableProps) {
   const handleMessage = useCallback((event: MessageEvent) => {
     const newData: TableData = JSON.parse(event.data);
 
-    console.log("newData", newData);
+    // Debugging incoming data
+    // console.log("newData", newData);
 
-    setData((prevData) => {
+    setData((prev) => {
       // Merge previous data with new data
-      const updatedData = { ...(prevData || {}), ...newData };
+      const updated = { ...prev, ...newData };
+
+      if (!initialDataLoaded.current) {
+        initialDataLoaded.current = true;
+        setIsLoadingInitialData(false);
+      }
 
       // Update banks separately to trigger animations
-      if (JSON.stringify(newData.banks) !== JSON.stringify(prevData?.banks)) {
+      if (JSON.stringify(newData.banks) !== JSON.stringify(prev?.banks)) {
         setBanks(newData.banks);
       }
-      return updatedData;
+      return updated;
     });
   }, []);
 
@@ -215,22 +256,16 @@ export default function PokerTable({ tableId }: PokerTableProps) {
 
     connectSSE(); // Start the connection
 
-    // Cleanup on unmount
     return () => {
-      if (eventSource) {
-        eventSource.close();
-        console.log("SSE connection closed.");
-      }
-      if (reconnectTimeout) {
-        clearTimeout(reconnectTimeout);
+      if (eventSourceRef.current) {
+        eventSourceRef.current.close();
+        eventSourceRef.current = null;
       }
     };
   }, [tableId, handleMessage]);
 
   // Bank animation
   useEffect(() => {
-    if (Object.keys(banks.items).length === 0) return;
-
     const newAnimatedBanks = Object.keys(banks.items).reduce((acc, key) => {
       acc[key] = true;
       return acc;
@@ -277,7 +312,7 @@ export default function PokerTable({ tableId }: PokerTableProps) {
 
     setWinners(banks.items[key].winners.map(Number));
     setTimeout(() => setWinners([]), 5000);
-  }, [banks]);
+  }, [banks.items, banks.rake]);
 
   // Memoization of table cards
   const tableCards = useMemo(() => {
@@ -344,16 +379,64 @@ export default function PokerTable({ tableId }: PokerTableProps) {
     percent,
   ]);
 
+  const openModalRebuy = () => {
+    setStateModalRebuy(true);
+  };
+
+  const handleRebuy = (chips) => {
+    fetchRebuy(data.id, chips);
+  };
+
+  const handleLeaveTable = () => {
+    fetchLeaveTable(data.id);
+  };
+
+  const handleHistoryTable = () => {
+    console.log("handleHistoryTable");
+  };
+
+  const errorMessages = [
+    rebuyErrorsMessage,
+    rebuyError?.message,
+    actionError,
+    LeaveTableError,
+    LeaveTableErrorsMessage,
+  ].filter(Boolean);
+
+  const isAnyLoading = isLoadingInitialData || isLeaveTableLoading;
+
   return (
-    <div className="relative min-h-screen bg-zinc-900">
-      {/* Error display */}
-      {actionError && (
-        <div className="fixed top-4 left-1/2 -translate-x-1/2 z-50">
-          <ErrorMessage message={actionError} />
+    <div className="relative h-vh-fullScreen bg-zinc-900">
+      {/* errors messages */}
+      {errorMessages.map((err, idx) => (
+        <div key={idx}>
+          <ErrorMessage message={err} />
+        </div>
+      ))}
+
+      {/* Loader */}
+      {isAnyLoading && (
+        <div className="absolute w-full h-vh-fullScreen bg-black opacity-50 z-20">
+          <div className="absolute top-1/4 left-1/2">
+            <Loader />
+          </div>
         </div>
       )}
 
-      <PokerNavBar />
+      {/* Poker  */}
+      <PokerNavBar
+        onRebuyClick={openModalRebuy}
+        onPokerHistoryClick={handleHistoryTable}
+      />
+
+      {/* Rebuy Modal */}
+      <RebuyModal
+        isOpen={stateModalRebuy}
+        onClose={() => setStateModalRebuy(false)}
+        onRebuy={handleRebuy}
+        initialStack={50}
+        isLoading={isRebuyLoading}
+      />
 
       <TableInfo data={data} />
 
@@ -437,12 +520,17 @@ export default function PokerTable({ tableId }: PokerTableProps) {
           onAction={onAction}
           onChangeBet={handleChange}
           onPercentBet={handlePercent}
+          isLoading={isActionLoading}
         />
       )}
 
-      {/* chat and settings */}
+      {/* chat and Leave the Table */}
       <div className="fixed bottom-4 left-4 flex gap-4 z-30">
-        <button className="rounded-full p-2" aria-label="Settings">
+        <button
+          onClick={handleLeaveTable}
+          className="rounded-full p-2 hover:scale-110 hover:opacity-80 transition-transform duration-300"
+          aria-label="leave the table"
+        >
           <svg viewBox="0 0 24 24" className="w-8 h-8 md:w-10 md:h-10">
             <path
               d="M8,3C6.89,3 6,3.89 6,5V21H18V5C18,3.89 17.11,3 16,3H8M8,5H16V19H8V5M13,11V13H15V11H13Z"
@@ -450,7 +538,10 @@ export default function PokerTable({ tableId }: PokerTableProps) {
             />
           </svg>
         </button>
-        <button className="rounded-full p-2" aria-label="Chat">
+        <button
+          className="rounded-full p-2 hover:scale-110 hover:opacity-80 transition-transform duration-300"
+          aria-label="Chat"
+        >
           <svg viewBox="0 0 24 24" className="w-8 h-8 md:w-10 md:h-10">
             <path
               d="M12,3C17.5,3 22,6.58 22,11C22,15.42 17.5,19 12,19C10.76,19 9.57,18.82 8.47,18.5C5.55,21 2,21 2,21C4.33,18.67 4.7,17.1 4.75,16.5C3.05,15.07 2,13.13 2,11C2,6.58 6.5,3 12,3M17,12V10H15V12H17M13,12V10H11V12H13M9,12V10H7V12H9Z"

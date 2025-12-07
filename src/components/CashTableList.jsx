@@ -1,5 +1,5 @@
 
-import React, { useState } from "react"; // <-- Виправлення 1
+import { useState } from "react"; // <-- Виправлення 1
 import MyButton from "../components/UI/MyButton";
 import Loader from "../components/UI/Loader/Loader";
 import JoinTableModal from "../components/Modals/JoinTableModal";

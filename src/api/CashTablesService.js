@@ -4,14 +4,14 @@ import AxiosApiInstance from './AxiosInstans/AxiosApiInstance';
 
 export default class CashTablesService {
     static async getTableList(limit = 10, page = 1) {
-        const response = await axios.get(getApiRoute('cash-tables'), 
-        {
-            params: {
-                limit: limit,
-                page: page
-            },
-            
-        })
+        const response = await axios.get(getApiRoute('cash-tables'),
+            {
+                params: {
+                    limit: limit,
+                    page: page
+                },
+
+            })
         return response
     }
 
@@ -30,10 +30,16 @@ export default class CashTablesService {
     static async connectToTable(settingId, stack) {
 
         const response = await AxiosApiInstance.post(getApiRoute('cash-tables/' + settingId + '/connect'),
-        {
-            stack: stack
-        }
-    )
+            {
+                stack: stack
+            }
+        )
+
+        return response
+    }
+
+    static async leaveTable(tableId) {
+        const response = await AxiosApiInstance.post(getApiRoute('cash-tables/' + tableId + '/leave'))
 
         return response
     }
