@@ -8,7 +8,7 @@ import { getApiRoute } from '../../helpers/router';
  */
 export default class logoutService {
 
-  static async logout() {
+  static async logout(): Promise<any> {
     const refreshToken = Cookies.get('refresh_token');
       // We send a request to the server to remove the Refresh Token from the database
       await AxiosApiInstance.post(getApiRoute('auth/logout'), { 

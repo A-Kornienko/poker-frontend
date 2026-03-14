@@ -1,6 +1,10 @@
 import React, { useEffect, useState } from "react";
 
-const ErrorMessage = ({ message }) => {
+interface ErrorMessageProps {
+  message: string;
+}
+
+const ErrorMessage: React.FC<ErrorMessageProps> = ({ message }) => {
   const [visible, setVisible] = useState(!!message);
 
   useEffect(() => {

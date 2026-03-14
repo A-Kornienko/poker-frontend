@@ -4,7 +4,16 @@ import MyButton from "../components/UI/MyButton";
 import Loader from "../components/UI/Loader/Loader";
 import JoinTableModal from "../components/Modals/JoinTableModal";
 
-const CashTableList = ({
+interface CashTableListProps {
+  tables: any;
+  isTablesLoading: boolean;
+  selectedRowId: any;
+  tableInfo: (id: any) => void;
+  joinToTable: (id: any, stack: number) => void;
+  isTableInfo: boolean;
+}
+
+const CashTableList: React.FC<CashTableListProps> = ({
   tables,
   isTablesLoading,
   selectedRowId,

@@ -2,9 +2,17 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 import Cookies from "js-cookie";
 import { jwtDecode } from "jwt-decode";
 
-const AuthContext = createContext(null);
+interface AuthContextType {
+  user: any;
+  loading: boolean;
+  login: (userData: any) => void;
+  logout: () => void;
+  isAuthenticated: boolean;
+}
 
-export const AuthProvider = ({ children }) => {
+const AuthContext = createContext<AuthContextType | null>(null);
+
+export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
 
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -23,7 +31,7 @@ export const AuthProvider = ({ children }) => {
     setLoading(false);
   }, []);
 
-  const login = (userData) => {setUser(userData)};
+  const login = (userData: any) => {setUser(userData)};
   const logout = () => {setUser(null)};
 
   return (
@@ -35,4 +43,10 @@ export const AuthProvider = ({ children }) => {
   );
 };
 
-export const useAuth = () => useContext(AuthContext);
+export const useAuth = (): AuthContextType => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error("useAuth must be used within an AuthProvider");
+  }
+  return context;
+};

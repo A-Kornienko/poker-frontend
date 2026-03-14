@@ -3,7 +3,7 @@ import Cookies from 'js-cookie';
 
 export default class TableStateService {
 
-    static getTableStateSSE(tableId) {
+    static getTableStateSSE(tableId: string | number): EventSource {
 
         const token = Cookies.get('access_token');
         if (!token) {

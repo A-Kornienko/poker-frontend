@@ -1,7 +1,18 @@
 import React from "react";
 import Loader from "../components/UI/Loader/Loader";
 
-const CashTableSidebar = ({
+interface CashTableSidebarProps {
+  isTableInfo: boolean;
+  playersInfo: any[];
+  isPlayersInfoLoading: boolean;
+  getSettingDetails: () => void;
+  isSettingDetails: boolean;
+  isSettingDetailsLoading: boolean;
+  settingDetails: any;
+  closeSidebar: () => void;
+}
+
+const CashTableSidebar: React.FC<CashTableSidebarProps> = ({
   isTableInfo,
   playersInfo,
   isPlayersInfoLoading,
