@@ -1,5 +1,5 @@
 import React from "react";
-import MyModal from "../Ui/MyModal";
+import MyModal from "../UI/MyModal";
 import MyButton from "../UI/MyButton";
 
 interface JoinTableModalProps {

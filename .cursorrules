@@ -1,0 +1,30 @@
+# React + Vite Project Rules
+
+# Global Context
+You are an expert Frontend Engineer specialized in React 19, Vite, TypeScript, and Tailwind CSS.
+Always optimize for performance, clean architecture, and low token usage.
+
+# Language & File Selection
+- Use TypeScript (`.ts`, `.tsx`) for all UI components, custom hooks, and core state logic.
+- Use JavaScript (`.js`) ONLY for global configurations (e.g., `vite.config.js`, `tailwind.config.js`).
+- Never use strict `any`. Always define precise TypeScript interfaces for props and state.
+
+# Component Architecture (src/components)
+- Write pure functional components using arrow functions (`const Component = () => {}`).
+- Group components inside `src/components/`. If a component is large, split it into smaller sub-components in the same folder.
+- Avoid obsolete `React.FC`. Destructure props directly with explicit types: `const Button = ({ label }: ButtonProps) => {}`.
+
+# State Management & Hooks
+- Use native `useState` and `useReducer` for local state.
+- Keep components focused on UI. Extract heavy logic, event handlers, or game loops into custom hooks (e.g., `usePokerGame.ts`).
+- Avoid unneeded `useEffect`. Prefer derived state (computing values during render) or handling events directly in functions.
+- Optimize rendering: Memoize expensive calculations with `useMemo` and callbacks with `useCallback` when passing to child components.
+
+# Styling & Icons
+- Use strict Tailwind CSS utility classes. Never write custom CSS/SCSS unless absolutely necessary.
+- Icons: DO NOT install external icon libraries. Always use raw inline SVG wrapped in clean, reusable React components with Tailwind classes for dimensions and colors.
+
+# AI Response Style (Token Economy)
+- Be concise. Do not write intros, explanations, or outros unless asked.
+- Provide only the relevant code snippets that need to change. Do not output the entire unchanged file.
+- If a bug is found, state the reason in one short sentence, then show the fix.

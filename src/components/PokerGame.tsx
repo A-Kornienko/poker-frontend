@@ -1,4 +1,4 @@
-import { useEffect, useState, useMemo, useCallback, useRef } from "react";
+import { useEffect, useState, useMemo, useCallback, useRef, Fragment } from "react";
 import { useFetching } from "../hooks/useFetching";
 import BetService from "../api/BetService";
 import TableStateService from "../api/TableStateService";
@@ -18,52 +18,7 @@ import RebuyModal from "../components/Modals/RebuyModal";
 import RebuyService from "../api/RebuyService";
 import CashTablesService from "../api/CashTablesService";
 import Loader from "../components/UI/Loader/Loader";
-
-// Improved player and chip positioning
-type GridAreaType = "player" | "blindChip" | "betChip";
-
-const getGridArea = (place: number, type: GridAreaType = "player"): string => {
-  const positions: { [key in GridAreaType]: { [key: number]: string } } = {
-    player: {
-      1: "5 / 5 / 7 / 7",
-      2: "5 / 7 / 7 / 9",
-      3: "4 / 10 / 5 / 11",
-      4: "2 / 10 / 4 / 11",
-      5: "1 / 7 / 2 / 9",
-      6: "1 / 5 / 2 / 7",
-      7: "1 / 3 / 2 / 5",
-      8: "2 / 1 / 4 / 2",
-      9: "4 / 1 / 5 / 2",
-      10: "5 / 3 / 7 / 5",
-    },
-    blindChip: {
-      1: "4 / 3 / 6 / 8",
-      2: "4 / 7 / 6 / 7",
-      3: "4 / 9 / 6 / 9",
-      4: "3 / 9 / 4 / 10",
-      5: "2 / 7 / 3 / 8",
-      6: "2 / 5 / 3 / 6",
-      7: "2 / 3 / 3 / 4",
-      8: "3 / 2 / 4 / 3",
-      9: "4 / 2 / 6 / 3",
-      10: "4 / 3 / 6 / 4",
-    },
-    betChip: {
-      1: "4 / 5 / 6 / 8",
-      2: "4 / 8 / 6 / 9",
-      3: "4 / 9 / 5 / 10",
-      4: "2 / 9 / 4 / 10",
-      5: "2 / 8 / 3 / 9",
-      6: "2 / 6 / 3 / 6",
-      7: "2 / 4 / 3 / 4",
-      8: "2 / 2 / 4 / 3",
-      9: "4 / 2 / 5 / 3",
-      10: "4 / 4 / 6 / 4",
-    },
-  };
-
-  return positions[type][place] || "3 / 5";
-};
+import { TIMERS, BAR_COLOR_THRESHOLDS, COLORS, Z_INDEXES, ANIMATIONS, GRID_AREAS, INITIAL_VALUES } from "../constants/pokerGameConstants";
 
 interface PokerTableProps {
   tableId: number;
@@ -114,7 +69,6 @@ export default function PokerTable({ tableId }: PokerTableProps) {
     suggestCombination: "",
     isAuthorized: true,
   });
-  const [banks, setBanks] = useState<Bank>(data.banks);
   const [animatedBanks, setAnimatedBanks] = useState<{
     [key: string]: boolean;
   }>({});
@@ -127,8 +81,12 @@ export default function PokerTable({ tableId }: PokerTableProps) {
   const [rebuyErrorsMessage, setRebuyErrorsMessage] = useState("");
   const [LeaveTableErrorsMessage, setLeaveTableErrorsMessage] = useState("");
   const [isLoadingInitialData, setIsLoadingInitialData] = useState(true);
+  // Refs
   const initialDataLoaded = useRef(false);
   const eventSourceRef = useRef<EventSource | null>(null);
+  const prevBanksRef = useRef<Bank>(data.banks);
+  const betAmountRef = useRef(betAmount);
+  betAmountRef.current = betAmount;
 
   // API bid processing
   const [fetchAction, isActionLoading, actionError] = useFetching(
@@ -163,48 +121,51 @@ export default function PokerTable({ tableId }: PokerTableProps) {
   );
 
   // Player action processing
-  const onAction = (action: string) => {
-    fetchAction(tableId, action, betAmount);
-  };
+  const fetchActionRef = useRef(fetchAction);
+  fetchActionRef.current = fetchAction;
 
-  // Update bet amount
-  const handleChange = (value: number | string) => {
-    let val = Number(value);
-    if (val < minBet) val = minBet;
-    if (val > maxBet) val = maxBet;
-    setBetAmount(val);
-  };
-
-  // Setting the procent rate
-  const handlePercent = (percent: number) => {
-    const val = Math.floor((maxBet * percent) / 100);
-    setBetAmount(val);
-  };
+  const onAction = useCallback((action: string) => {
+    fetchActionRef.current(tableId, action, betAmountRef.current);
+  }, [tableId]);
 
   const minBet = data.betRange?.min || 0;
   const maxBet = data.betRange?.max || 0;
+  // Update bet amount
+  const handleChange = useCallback((value: number | string) => {
+      let val = Number(value);
+      if (val < minBet) val = minBet;
+      if (val > maxBet) val = maxBet;
+      setBetAmount(val);
+    }, [minBet, maxBet]);
+
+  // Setting the procent rate
+  const handlePercent = useCallback((percent: number) => {
+    const val = Math.floor((maxBet * percent) / 100);
+    setBetAmount(val);
+  }, [maxBet]);
+
+  function banksChanged(oldBanks: Bank, newBanks: Bank): boolean {
+    if (oldBanks.rake !== newBanks.rake) return true;
+    const oldBanksSum = Object.keys(oldBanks.items);
+    const newBanksSum = Object.keys(newBanks.items);
+    if (oldBanksSum.length !== newBanksSum.length) return true;
+    for (const k of oldBanksSum) {
+      if (oldBanks.items[k]?.sum !== newBanks.items[k]?.sum) return true;
+    }
+    return false;
+  }
 
   const handleMessage = useCallback((event: MessageEvent) => {
     const newData: TableData = JSON.parse(event.data);
 
+    setData((prev) => ({ ...prev, ...newData }));
+
+    if (!initialDataLoaded.current) {
+      initialDataLoaded.current = true;
+      setIsLoadingInitialData(false);
+    }
     // Debugging incoming data
     // console.log("newData", newData);
-
-    setData((prev) => {
-      // Merge previous data with new data
-      const updated = { ...prev, ...newData };
-
-      if (!initialDataLoaded.current) {
-        initialDataLoaded.current = true;
-        setIsLoadingInitialData(false);
-      }
-
-      // Update banks separately to trigger animations
-      if (JSON.stringify(newData.banks) !== JSON.stringify(prev?.banks)) {
-        setBanks(newData.banks);
-      }
-      return updated;
-    });
   }, []);
 
   // SSE connection with token
@@ -214,15 +175,26 @@ export default function PokerTable({ tableId }: PokerTableProps) {
       return;
     }
 
-    let eventSource: EventSource;
-    let reconnectTimeout: NodeJS.Timeout;
+    let reconnectTimeout: ReturnType<typeof setTimeout>;
+
+    const closeSSE = () => {
+      const es = eventSourceRef.current;
+      if (!es) return;
+      es.onmessage = null;
+      es.onerror = null;
+      es.close();
+      eventSourceRef.current = null;
+    };
 
     const connectSSE = async () => {
+      closeSSE(); 
+
       console.log("Attempting to connect to SSE...");
 
       try {
         // Initializing connection
-        eventSource = TableStateService.getTableStateSSE(tableId);
+        const eventSource = TableStateService.getTableStateSSE(tableId);
+        eventSourceRef.current = eventSource;
 
         // 2. Message handler
         eventSource.onmessage = handleMessage;
@@ -230,7 +202,7 @@ export default function PokerTable({ tableId }: PokerTableProps) {
         // 3. Error handler with token refresh logic
         eventSource.onerror = async (error) => {
           console.error("SSE Error detected:", error);
-          eventSource.close();
+          closeSSE();
           clearTimeout(reconnectTimeout);
 
           try {
@@ -256,30 +228,35 @@ export default function PokerTable({ tableId }: PokerTableProps) {
 
     connectSSE(); // Start the connection
 
+    // cleanup
     return () => {
-      if (eventSourceRef.current) {
-        eventSourceRef.current.close();
-        eventSourceRef.current = null;
-      }
+      clearTimeout(reconnectTimeout);
+      closeSSE();
     };
-  }, [tableId, handleMessage]);
+  }, [tableId, handleMessage, contextLogout, navigate]);
 
   // Bank animation
   useEffect(() => {
-    const newAnimatedBanks = Object.keys(banks.items).reduce((acc, key) => {
+    if (!banksChanged(prevBanksRef.current, data.banks)) {
+      return;
+    }
+
+    const newAnimatedBanks = Object.keys(data.banks.items).reduce((acc, key) => {
       acc[key] = true;
       return acc;
     }, {} as { [key: string]: boolean });
     setAnimatedBanks(newAnimatedBanks);
     setIsRakeAnimated(true);
 
+    prevBanksRef.current = data.banks;
     const timeout = setTimeout(() => {
       setAnimatedBanks({});
       setIsRakeAnimated(false);
     }, 1000);
+    
 
     return () => clearTimeout(timeout);
-  }, [banks.items, banks.rake]);
+  }, [data.banks]);
 
   // Timer update
   useEffect(() => {
@@ -299,20 +276,21 @@ export default function PokerTable({ tableId }: PokerTableProps) {
   const percent = (timeLeft / totalTime) * 100;
   const barColor =
     percent <= 30
-      ? "bg-red-500"
+      ? COLORS.BAR_RED
       : percent <= 60
-      ? "bg-yellow-500"
-      : "bg-green-500";
+      ? COLORS.BAR_YELLOW
+      : COLORS.BAR_GREEN;
 
   // Winner processing
   useEffect(() => {
-    if (!banks.items || Object.keys(banks.items).length === 0) return;
-    const key = Object.keys(banks.items)[0];
-    if (banks.items[key].winners.length === 0) return;
+    if (!data.banks.items || Object.keys(data.banks.items).length === 0) return;
+    const key = Object.keys(data.banks.items)[0];
+    if (data.banks.items[key].winners.length === 0) return;
 
-    setWinners(banks.items[key].winners.map(Number));
-    setTimeout(() => setWinners([]), 5000);
-  }, [banks.items, banks.rake]);
+    setWinners(data.banks.items[key].winners.map(Number));
+    const winnersAnimation = setTimeout(() => setWinners([]), 5000);
+    clearTimeout(winnersAnimation)
+  }, [data.banks.items]);
 
   // Memoization of table cards
   const tableCards = useMemo(() => {
@@ -333,13 +311,15 @@ export default function PokerTable({ tableId }: PokerTableProps) {
 
   // Memoization of players
   const playerElements = useMemo(() => {
-    return Object.keys(data.players).map((place) => (
-      <>
+    return Object.keys(data.players).map((place) => {
+      const isTurn = data.turnPlace === Number(place);
+      return (
+      <Fragment key={place}>
         {/* Player Chips */}
         <div
           key={place + "_chips"}
           className="absolute place-self-center z-30"
-          style={{ gridArea: getGridArea(Number(place), "betChip") }}
+          style={{ gridArea: GRID_AREAS.betChip[Number(place)] || INITIAL_VALUES.GRID_FALLBACK }}
         >
           {data.players[place].bet > 0 && (
             <div className="place-self-center ">
@@ -353,21 +333,26 @@ export default function PokerTable({ tableId }: PokerTableProps) {
         <div
           key={place + "_player"}
           className="absolute place-self-center z-20"
-          style={{ gridArea: getGridArea(Number(place), "player") }}
+          style={{ gridArea: GRID_AREAS.player[Number(place)] }}
         >
           <Player
             player={data.players[place]}
             myPlace={data.myPlace}
-            cards={data.cards}
+            cards={
+              data.myPlace === Number(place)
+                ? { table: data.cards.table, player: data.cards.player }
+                : { table: data.cards.table, player: [] }
+            }
             currency={data.currency}
             isWinner={winners.includes(Number(place))}
-            isTurn={data.turnPlace === Number(place)}
-            barColor={barColor}
-            percent={percent}
+            isTurn={isTurn}
+            barColor={isTurn ? barColor : ""}
+            percent={isTurn ? percent : 0}
           />
         </div>
-      </>
-    ));
+        </Fragment>
+      );
+  });
   }, [
     data.players,
     data.myPlace,
@@ -379,21 +364,26 @@ export default function PokerTable({ tableId }: PokerTableProps) {
     percent,
   ]);
 
-  const openModalRebuy = () => {
-    setStateModalRebuy(true);
-  };
+  const openModalRebuy = useCallback(() => setStateModalRebuy(true), []);
+  const closeRebuyModal = useCallback(() => setStateModalRebuy(false), []);
+ 
+  const fetchRebuyRef = useRef(fetchRebuy);
+  fetchRebuyRef.current = fetchRebuy;
 
-  const handleRebuy = (chips) => {
-    fetchRebuy(data.id, chips);
-  };
+  const handleRebuy = useCallback((chips: number) => {
+    fetchRebuyRef.current(data.id, chips);
+  }, [data.id]);
 
-  const handleLeaveTable = () => {
-    fetchLeaveTable(data.id);
-  };
+  const fetchLeaveTableRef = useRef(fetchLeaveTable);
+  fetchLeaveTableRef.current = fetchLeaveTable;
 
-  const handleHistoryTable = () => {
+  const handleLeaveTable = useCallback(() => {
+    fetchLeaveTableRef.current(data.id);
+  }, [data.id]);
+
+  const handleHistoryTable = useCallback(() => {
     console.log("handleHistoryTable");
-  };
+  }, []);
 
   const errorMessages = [
     rebuyErrorsMessage,
@@ -432,7 +422,7 @@ export default function PokerTable({ tableId }: PokerTableProps) {
       {/* Rebuy Modal */}
       <RebuyModal
         isOpen={stateModalRebuy}
-        onClose={() => setStateModalRebuy(false)}
+        onClose={closeRebuyModal}
         onRebuy={handleRebuy}
         initialStack={50}
         isLoading={isRebuyLoading}
@@ -457,7 +447,7 @@ export default function PokerTable({ tableId }: PokerTableProps) {
           {data.dealerPlace > 0 && (
             <div
               className="place-self-center z-30"
-              style={{ gridArea: getGridArea(data.dealerPlace, "blindChip") }}
+              style={{ gridArea: GRID_AREAS.blindChip[data.dealerPlace] }}
             >
               <BlindChip type="dealer" />
             </div>
@@ -466,7 +456,7 @@ export default function PokerTable({ tableId }: PokerTableProps) {
             <div
               className="place-self-center z-30"
               style={{
-                gridArea: getGridArea(data.smallBlindPlace, "blindChip"),
+                gridArea: GRID_AREAS.blindChip[data.smallBlindPlace],
               }}
             >
               <BlindChip type="smallBlind" />
@@ -475,7 +465,7 @@ export default function PokerTable({ tableId }: PokerTableProps) {
           {data.bigBlindPlace > 0 && (
             <div
               className="place-self-center z-30"
-              style={{ gridArea: getGridArea(data.bigBlindPlace, "blindChip") }}
+              style={{ gridArea: GRID_AREAS.blindChip[data.bigBlindPlace] }}
             >
               <BlindChip type="bigBlind" />
             </div>
@@ -485,9 +475,9 @@ export default function PokerTable({ tableId }: PokerTableProps) {
           {playerElements}
 
           {/* Pots and rake */}
-          {Object.keys(banks.items).length > 0 && (
+          {Object.keys(data.banks.items).length > 0 && (
             <div className="absolute place-self-center top-[32%] text-center z-10">
-              {Object.entries(banks.items).map(([key, bank], index) => (
+              {Object.entries(data.banks.items).map(([key, bank], index) => (
                 <div
                   key={key}
                   className={`text-white text-lg font-semibold drop-shadow ${
