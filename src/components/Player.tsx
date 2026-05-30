@@ -1,6 +1,7 @@
-import React, { memo } from "react";
+import { memo } from "react";
 import { ASSETS } from "../helpers/assets";
 import { Player as PlayerType, Card } from "../types/poker";
+import TurnTimerBar from "./TurnTimerBar";
 
 interface PlayerProps {
   player: PlayerType;
@@ -9,8 +10,7 @@ interface PlayerProps {
   currency: string;
   isWinner: boolean;
   isTurn: boolean;
-  barColor: string;
-  percent: number;
+  betExpTime?: number;
 }
 
 /**
@@ -25,8 +25,7 @@ const Player = memo(
     currency,
     isWinner,
     isTurn,
-    barColor,
-    percent,
+    betExpTime,
   }: PlayerProps) => (
     <div
       className={`player-${
@@ -107,16 +106,7 @@ const Player = memo(
           <div className="truncate rounded-t-md border-b border-white/10 bg-gray-800 px-1 text-white/60">
             {player.profile.name}
           </div>
-          {isTurn && (
-            <div className="w-full max-w-md mx-auto">
-              <div className="w-full h-1 bg-gray-700 rounded-full overflow-hidden">
-                <div
-                  className={`h-full ${barColor} transition-all duration-1000 ease-linear`}
-                  style={{ width: `${percent}%` }}
-                />
-              </div>
-            </div>
-          )}
+          {isTurn && <TurnTimerBar betExpTime={betExpTime} />}
           <div className="rounded-b-2xl bg-gray-600 px-3 py-1">
             <div className="text-blue-300 flex items-center justify-center text-sm">
               {player.stack} {currency}

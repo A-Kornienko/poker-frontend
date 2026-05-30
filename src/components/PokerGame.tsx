@@ -1,24 +1,25 @@
-import { useEffect, useState, useMemo, useCallback, useRef, Fragment } from "react";
+import { useState, useCallback, useRef, useMemo } from "react";
+import TableCards from "./TableCards";
+import SeatedPlayers from "./SeatedPlayers";
 import { useFetching } from "../hooks/useFetching";
+import { useBankAnimation } from "../hooks/useBankAnimation";
+import { useWinnerAnimation } from "../hooks/useWinnerAnimation";
+import { useTableSSE } from "../hooks/useTableSSE";
 import BetService from "../api/BetService";
-import TableStateService from "../api/TableStateService";
 import { ASSETS } from "../helpers/assets";
-import { TableData, Bank } from "../types/poker";
+import { TableData } from "../types/poker";
 import PokerNavBar from "./PokerNavBar";
 import TableInfo from "./TableInfo";
-import Player from "./Player";
 import BetControls from "./BetControls";
 import ErrorMessage from "./UI/ErrorMessage";
-import BlindChip from "./BlindChip";
-import ChipsBlock from "./ChipsBlock";
-import UserService from "../api/Auth/UserService";
+import TablePots from "./TablePots";
+import TableBlindChips from "./TableBlindChips";
 import { useAuth } from "../context/AuthContext";
 import { useNavigate } from "react-router-dom";
 import RebuyModal from "../components/Modals/RebuyModal";
 import RebuyService from "../api/RebuyService";
 import CashTablesService from "../api/CashTablesService";
 import Loader from "../components/UI/Loader/Loader";
-import { TIMERS, BAR_COLOR_THRESHOLDS, COLORS, Z_INDEXES, ANIMATIONS, GRID_AREAS, INITIAL_VALUES } from "../constants/pokerGameConstants";
 
 interface PokerTableProps {
   tableId: number;
@@ -69,30 +70,22 @@ export default function PokerTable({ tableId }: PokerTableProps) {
     suggestCombination: "",
     isAuthorized: true,
   });
-  const [animatedBanks, setAnimatedBanks] = useState<{
-    [key: string]: boolean;
-  }>({});
-  const [isRakeAnimated, setIsRakeAnimated] = useState(false);
-  const [winners, setWinners] = useState<number[]>([]);
   const [betAmount, setBetAmount] = useState(0);
-  const [timeLeft, setTimeLeft] = useState(0);
-  const [totalTime, setTotalTime] = useState(0);
   const [stateModalRebuy, setStateModalRebuy] = useState(false);
   const [rebuyErrorsMessage, setRebuyErrorsMessage] = useState("");
   const [LeaveTableErrorsMessage, setLeaveTableErrorsMessage] = useState("");
   const [isLoadingInitialData, setIsLoadingInitialData] = useState(true);
   // Refs
   const initialDataLoaded = useRef(false);
-  const eventSourceRef = useRef<EventSource | null>(null);
-  const prevBanksRef = useRef<Bank>(data.banks);
-  const betAmountRef = useRef(betAmount);
-  betAmountRef.current = betAmount;
+
+  const { animatedBanks, isRakeAnimated } = useBankAnimation(data.banks);
+  const winners = useWinnerAnimation(data.banks.items);
 
   // API bid processing
   const [fetchAction, isActionLoading, actionError] = useFetching(
     async (tableId: number, action: string, betAmount: number) => {
       await BetService.bet(tableId, action, betAmount);
-    }
+    },
   );
 
   const [fetchRebuy, isRebuyLoading, rebuyError] = useFetching(
@@ -104,7 +97,7 @@ export default function PokerTable({ tableId }: PokerTableProps) {
       if (!response.data.success) {
         setRebuyErrorsMessage(response.data.error);
       }
-    }
+    },
   );
 
   const [fetchLeaveTable, isLeaveTableLoading, LeaveTableError] = useFetching(
@@ -117,43 +110,38 @@ export default function PokerTable({ tableId }: PokerTableProps) {
       }
 
       navigate("/cash-table");
-    }
+    },
   );
 
   // Player action processing
-  const fetchActionRef = useRef(fetchAction);
-  fetchActionRef.current = fetchAction;
-
-  const onAction = useCallback((action: string) => {
-    fetchActionRef.current(tableId, action, betAmountRef.current);
-  }, [tableId]);
+  const onAction = useCallback(
+    (action: string) => {
+      fetchAction(tableId, action, betAmount);
+    },
+    [tableId, fetchAction, betAmount],
+  );
 
   const minBet = data.betRange?.min || 0;
   const maxBet = data.betRange?.max || 0;
   // Update bet amount
-  const handleChange = useCallback((value: number | string) => {
+  const handleChange = useCallback(
+    (value: number | string) => {
       let val = Number(value);
       if (val < minBet) val = minBet;
       if (val > maxBet) val = maxBet;
       setBetAmount(val);
-    }, [minBet, maxBet]);
+    },
+    [minBet, maxBet],
+  );
 
   // Setting the procent rate
-  const handlePercent = useCallback((percent: number) => {
-    const val = Math.floor((maxBet * percent) / 100);
-    setBetAmount(val);
-  }, [maxBet]);
-
-  function banksChanged(oldBanks: Bank, newBanks: Bank): boolean {
-    if (oldBanks.rake !== newBanks.rake) return true;
-    const oldBanksSum = Object.keys(oldBanks.items);
-    const newBanksSum = Object.keys(newBanks.items);
-    if (oldBanksSum.length !== newBanksSum.length) return true;
-    for (const k of oldBanksSum) {
-      if (oldBanks.items[k]?.sum !== newBanks.items[k]?.sum) return true;
-    }
-    return false;
-  }
+  const handlePercent = useCallback(
+    (percent: number) => {
+      const val = Math.floor((maxBet * percent) / 100);
+      setBetAmount(val);
+    },
+    [maxBet],
+  );
 
   const handleMessage = useCallback((event: MessageEvent) => {
     const newData: TableData = JSON.parse(event.data);
@@ -164,234 +152,54 @@ export default function PokerTable({ tableId }: PokerTableProps) {
       initialDataLoaded.current = true;
       setIsLoadingInitialData(false);
     }
-    // Debugging incoming data
-    // console.log("newData", newData);
   }, []);
 
-  // SSE connection with token
-  useEffect(() => {
-    if (!tableId) {
-      console.error("tableId is missing");
-      return;
-    }
+  const handleAuthError = useCallback(() => {
+    contextLogout();
+    navigate("/login");
+  }, [contextLogout, navigate]);
 
-    let reconnectTimeout: ReturnType<typeof setTimeout>;
-
-    const closeSSE = () => {
-      const es = eventSourceRef.current;
-      if (!es) return;
-      es.onmessage = null;
-      es.onerror = null;
-      es.close();
-      eventSourceRef.current = null;
-    };
-
-    const connectSSE = async () => {
-      closeSSE(); 
-
-      console.log("Attempting to connect to SSE...");
-
-      try {
-        // Initializing connection
-        const eventSource = TableStateService.getTableStateSSE(tableId);
-        eventSourceRef.current = eventSource;
-
-        // 2. Message handler
-        eventSource.onmessage = handleMessage;
-
-        // 3. Error handler with token refresh logic
-        eventSource.onerror = async (error) => {
-          console.error("SSE Error detected:", error);
-          closeSSE();
-          clearTimeout(reconnectTimeout);
-
-          try {
-            // refresh token via Axios interceptor
-            await UserService.getUser();
-
-            console.log("Token refreshed via Axios. Reconnecting SSE shortly...");
-
-            reconnectTimeout = setTimeout(connectSSE, 100); // Reconnect shortly after token refresh
-          } catch (axiosError) {
-            // if token refresh fails (e.g., invalid refresh_token)
-            console.error("Failed to refresh token. User must log in.");
-            contextLogout(); // delete auth context
-            navigate("/login"); // Redirect to login
-          }
-        };
-      } catch (error) {
-        console.error("Initial SSE connection failed:", error);
-        // Retry connection after 5 seconds
-        reconnectTimeout = setTimeout(connectSSE, 5000);
-      }
-    };
-
-    connectSSE(); // Start the connection
-
-    // cleanup
-    return () => {
-      clearTimeout(reconnectTimeout);
-      closeSSE();
-    };
-  }, [tableId, handleMessage, contextLogout, navigate]);
-
-  // Bank animation
-  useEffect(() => {
-    if (!banksChanged(prevBanksRef.current, data.banks)) {
-      return;
-    }
-
-    const newAnimatedBanks = Object.keys(data.banks.items).reduce((acc, key) => {
-      acc[key] = true;
-      return acc;
-    }, {} as { [key: string]: boolean });
-    setAnimatedBanks(newAnimatedBanks);
-    setIsRakeAnimated(true);
-
-    prevBanksRef.current = data.banks;
-    const timeout = setTimeout(() => {
-      setAnimatedBanks({});
-      setIsRakeAnimated(false);
-    }, 1000);
-    
-
-    return () => clearTimeout(timeout);
-  }, [data.banks]);
-
-  // Timer update
-  useEffect(() => {
-    setTimeLeft(data.players[data.turnPlace]?.betExpTime || totalTime);
-    setTotalTime(data.players[data.turnPlace]?.betExpTime || totalTime);
-  }, [data.turnPlace, totalTime]);
-
-  // Countdown timer
-  useEffect(() => {
-    if (timeLeft <= 0) return;
-    const timer = setInterval(() => {
-      setTimeLeft((prev) => (prev > 0 ? prev - 1 : 0));
-    }, 1000);
-    return () => clearInterval(timer);
-  }, [timeLeft]);
-
-  const percent = (timeLeft / totalTime) * 100;
-  const barColor =
-    percent <= 30
-      ? COLORS.BAR_RED
-      : percent <= 60
-      ? COLORS.BAR_YELLOW
-      : COLORS.BAR_GREEN;
-
-  // Winner processing
-  useEffect(() => {
-    if (!data.banks.items || Object.keys(data.banks.items).length === 0) return;
-    const key = Object.keys(data.banks.items)[0];
-    if (data.banks.items[key].winners.length === 0) return;
-
-    setWinners(data.banks.items[key].winners.map(Number));
-    const winnersAnimation = setTimeout(() => setWinners([]), 5000);
-    clearTimeout(winnersAnimation)
-  }, [data.banks.items]);
-
-  // Memoization of table cards
-  const tableCards = useMemo(() => {
-    return data.cards.table.length > 0 ? (
-      <div className="absolute left-1/2 top-[40%] -translate-x-1/2 flex gap-2 z-10">
-        {data.cards.table.map((card, idx) => (
-          <img
-            key={idx}
-            src={`${ASSETS.CARDS(card.suit, card.value)}`}
-            alt={`Table Card ${idx + 1}`}
-            className="w-12 h-20 rounded shadow-md my-animate-deal-card md:w-16 md:h-24"
-            style={{ animationDelay: `${idx * 0.2}s` }}
-          />
-        ))}
-      </div>
-    ) : null;
-  }, [data.cards.table]);
-
-  // Memoization of players
-  const playerElements = useMemo(() => {
-    return Object.keys(data.players).map((place) => {
-      const isTurn = data.turnPlace === Number(place);
-      return (
-      <Fragment key={place}>
-        {/* Player Chips */}
-        <div
-          key={place + "_chips"}
-          className="absolute place-self-center z-30"
-          style={{ gridArea: GRID_AREAS.betChip[Number(place)] || INITIAL_VALUES.GRID_FALLBACK }}
-        >
-          {data.players[place].bet > 0 && (
-            <div className="place-self-center ">
-              <ChipsBlock />
-              <span className="text-white text-sm font-bold text-center ml-3">
-                {data.players[place].bet} {data.currency}
-              </span>
-            </div>
-          )}
-        </div>
-        <div
-          key={place + "_player"}
-          className="absolute place-self-center z-20"
-          style={{ gridArea: GRID_AREAS.player[Number(place)] }}
-        >
-          <Player
-            player={data.players[place]}
-            myPlace={data.myPlace}
-            cards={
-              data.myPlace === Number(place)
-                ? { table: data.cards.table, player: data.cards.player }
-                : { table: data.cards.table, player: [] }
-            }
-            currency={data.currency}
-            isWinner={winners.includes(Number(place))}
-            isTurn={isTurn}
-            barColor={isTurn ? barColor : ""}
-            percent={isTurn ? percent : 0}
-          />
-        </div>
-        </Fragment>
-      );
+  useTableSSE({
+    tableId,
+    onMessage: handleMessage,
+    onAuthError: handleAuthError,
   });
-  }, [
-    data.players,
-    data.myPlace,
-    data.cards,
-    data.currency,
-    winners,
-    data.turnPlace,
-    barColor,
-    percent,
-  ]);
 
-  const openModalRebuy = useCallback(() => setStateModalRebuy(true), []);
-  const closeRebuyModal = useCallback(() => setStateModalRebuy(false), []);
- 
-  const fetchRebuyRef = useRef(fetchRebuy);
-  fetchRebuyRef.current = fetchRebuy;
+  const openModalRebuy = () => setStateModalRebuy(true);
+  const closeRebuyModal = () => setStateModalRebuy(false);
 
-  const handleRebuy = useCallback((chips: number) => {
-    fetchRebuyRef.current(data.id, chips);
-  }, [data.id]);
-
-  const fetchLeaveTableRef = useRef(fetchLeaveTable);
-  fetchLeaveTableRef.current = fetchLeaveTable;
+  const handleRebuy = useCallback(
+    (chips: number) => {
+      fetchRebuy(data.id, chips);
+    },
+    [data.id, fetchRebuy],
+  );
 
   const handleLeaveTable = useCallback(() => {
-    fetchLeaveTableRef.current(data.id);
-  }, [data.id]);
+    fetchLeaveTable(data.id);
+  }, [data.id, fetchLeaveTable]);
 
   const handleHistoryTable = useCallback(() => {
     console.log("handleHistoryTable");
   }, []);
 
-  const errorMessages = [
-    rebuyErrorsMessage,
-    rebuyError?.message,
-    actionError,
-    LeaveTableError,
-    LeaveTableErrorsMessage,
-  ].filter(Boolean);
+  const errorMessages = useMemo(
+    () =>
+      [
+        rebuyErrorsMessage,
+        rebuyError?.message,
+        actionError?.message,
+        LeaveTableError?.message,
+        LeaveTableErrorsMessage,
+      ].filter((msg): msg is string => Boolean(msg)),
+    [
+      rebuyErrorsMessage,
+      rebuyError,
+      actionError,
+      LeaveTableError,
+      LeaveTableErrorsMessage,
+    ],
+  );
 
   const isAnyLoading = isLoadingInitialData || isLeaveTableLoading;
 
@@ -441,62 +249,32 @@ export default function PokerTable({ tableId }: PokerTableProps) {
           />
 
           {/* Table cards */}
-          {tableCards}
+          <TableCards cards={data.cards.table} />
 
           {/* Blind chips */}
-          {data.dealerPlace > 0 && (
-            <div
-              className="place-self-center z-30"
-              style={{ gridArea: GRID_AREAS.blindChip[data.dealerPlace] }}
-            >
-              <BlindChip type="dealer" />
-            </div>
-          )}
-          {data.smallBlindPlace > 0 && (
-            <div
-              className="place-self-center z-30"
-              style={{
-                gridArea: GRID_AREAS.blindChip[data.smallBlindPlace],
-              }}
-            >
-              <BlindChip type="smallBlind" />
-            </div>
-          )}
-          {data.bigBlindPlace > 0 && (
-            <div
-              className="place-self-center z-30"
-              style={{ gridArea: GRID_AREAS.blindChip[data.bigBlindPlace] }}
-            >
-              <BlindChip type="bigBlind" />
-            </div>
-          )}
+          <TableBlindChips
+            dealerPlace={data.dealerPlace}
+            smallBlindPlace={data.smallBlindPlace}
+            bigBlindPlace={data.bigBlindPlace}
+          />
 
-          {/* Players */}
-          {playerElements}
+          <SeatedPlayers
+            players={data.players}
+            myPlace={data.myPlace}
+            turnPlace={data.turnPlace}
+            currency={data.currency}
+            tableCards={data.cards.table}
+            holeCards={data.cards.player}
+            winners={winners}
+          />
 
           {/* Pots and rake */}
-          {Object.keys(data.banks.items).length > 0 && (
-            <div className="absolute place-self-center top-[32%] text-center z-10">
-              {Object.entries(data.banks.items).map(([key, bank], index) => (
-                <div
-                  key={key}
-                  className={`text-white text-lg font-semibold drop-shadow ${
-                    animatedBanks[key] ? "my-animate-pulse" : ""
-                  }`}
-                >
-                  {index === 0 ? "Pot" : `side Pot ${index}`}: {bank.sum}{" "}
-                  {data.currency}
-                </div>
-              ))}
-              <div
-                className={`text-white text-base font-semibold drop-shadow ${
-                  isRakeAnimated ? "my-animate-pulse" : ""
-                }`}
-              >
-                Rake: {data.banks?.rake || 0} {data.currency}
-              </div>
-            </div>
-          )}
+          <TablePots
+            banks={data.banks}
+            currency={data.currency}
+            animatedBanks={animatedBanks}
+            isRakeAnimated={isRakeAnimated}
+          />
         </div>
       </div>
 

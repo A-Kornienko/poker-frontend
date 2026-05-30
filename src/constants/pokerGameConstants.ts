@@ -7,7 +7,7 @@ export const TIMERS = {
   ANIMATION_DURATION: 1000, // Bank animation duration
 };
 
-// Проценти для кольору бару
+// Percentages for bar color
 export const BAR_COLOR_THRESHOLDS = {
   RED: 30,
   YELLOW: 60,
