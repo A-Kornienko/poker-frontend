@@ -8,7 +8,8 @@ import { useTableSSE } from "../hooks/useTableSSE";
 import BetService from "../api/BetService";
 import { ASSETS } from "../helpers/assets";
 import { TableData } from "../types/poker";
-import PokerNavBar from "./PokerNavBar";
+import PokerTopNavBar from "./PokerTopNavBar";
+import PokerBottomNavBar from "./PokerBottomNavBar";
 import TableInfo from "./TableInfo";
 import BetControls from "./BetControls";
 import ErrorMessage from "./UI/ErrorMessage";
@@ -179,6 +180,10 @@ export default function PokerTable({ tableId }: PokerTableProps) {
     fetchLeaveTable(data.id);
   }, [data.id, fetchLeaveTable]);
 
+  const handleChat = useCallback(() => {
+    console.log("handleChat");
+  }, [data.id]);
+
   const handleHistoryTable = useCallback(() => {
     console.log("handleHistoryTable");
   }, []);
@@ -222,7 +227,7 @@ export default function PokerTable({ tableId }: PokerTableProps) {
       )}
 
       {/* Poker  */}
-      <PokerNavBar
+      <PokerTopNavBar
         onRebuyClick={openModalRebuy}
         onPokerHistoryClick={handleHistoryTable}
       />
@@ -292,32 +297,10 @@ export default function PokerTable({ tableId }: PokerTableProps) {
         />
       )}
 
-      {/* chat and Leave the Table */}
-      <div className="fixed bottom-4 left-4 flex gap-4 z-30">
-        <button
-          onClick={handleLeaveTable}
-          className="rounded-full p-2 hover:scale-110 hover:opacity-80 transition-transform duration-300"
-          aria-label="leave the table"
-        >
-          <svg viewBox="0 0 24 24" className="w-8 h-8 md:w-10 md:h-10">
-            <path
-              d="M8,3C6.89,3 6,3.89 6,5V21H18V5C18,3.89 17.11,3 16,3H8M8,5H16V19H8V5M13,11V13H15V11H13Z"
-              style={{ fill: "#fff" }}
-            />
-          </svg>
-        </button>
-        <button
-          className="rounded-full p-2 hover:scale-110 hover:opacity-80 transition-transform duration-300"
-          aria-label="Chat"
-        >
-          <svg viewBox="0 0 24 24" className="w-8 h-8 md:w-10 md:h-10">
-            <path
-              d="M12,3C17.5,3 22,6.58 22,11C22,15.42 17.5,19 12,19C10.76,19 9.57,18.82 8.47,18.5C5.55,21 2,21 2,21C4.33,18.67 4.7,17.1 4.75,16.5C3.05,15.07 2,13.13 2,11C2,6.58 6.5,3 12,3M17,12V10H15V12H17M13,12V10H11V12H13M9,12V10H7V12H9Z"
-              style={{ fill: "#fff" }}
-            />
-          </svg>
-        </button>
-      </div>
+      <PokerBottomNavBar
+        onLeaveTableClick={handleLeaveTable}
+        onChatClick={handleChat}
+      />
     </div>
   );
 }
