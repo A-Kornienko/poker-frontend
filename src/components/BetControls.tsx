@@ -1,5 +1,4 @@
 import { memo } from "react";
-import { TableData } from "../types/poker";
 import Loader from "../components/UI/Loader/Loader";
 
 interface BetNavigationItem {
@@ -9,7 +8,7 @@ interface BetNavigationItem {
 }
 
 interface BetControlsProps {
-  data: TableData;
+  betNavigation: [] | string[];
   betAmount: number;
   minBet: number;
   maxBet: number;
@@ -25,7 +24,7 @@ interface BetControlsProps {
  */
 const BetControls = memo(
   ({
-    data,
+    betNavigation,
     betAmount,
     minBet,
     maxBet,
@@ -35,7 +34,7 @@ const BetControls = memo(
     isLoading = false,
   }: BetControlsProps) => {
     // Configuration of betting navigation buttons
-    const betNavigation: BetNavigationItem[] = [
+    const betNavigationList: BetNavigationItem[] = [
       {
         label: "FOLD",
         action: "fold",
@@ -62,8 +61,8 @@ const BetControls = memo(
     ];
 
     // Filter navigation buttons based on available actions
-    const betNavigationFiltered = betNavigation.filter((btn) =>
-      data.betNavigation.includes(btn.action)
+    const betNavigationFiltered = betNavigationList.filter((btn) =>
+      betNavigation.includes(btn.action)
     );
 
     return (

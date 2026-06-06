@@ -72,7 +72,7 @@ const CashTableList: React.FC<CashTableListProps> = ({
           </thead>
 
           <tbody className="bg-zinc-600 text-gray-300 text-center p-4">
-            {!isTablesLoading && tables.items.length === 0 ? (
+            {!isTablesLoading && tables?.items?.length === 0 ? (
               <tr>
                 <td colSpan={5}>
                   <div className="bg-zinc-700 text-red-400 rounded p-4 m-4 shadow font-semibold">
@@ -81,7 +81,7 @@ const CashTableList: React.FC<CashTableListProps> = ({
                 </td>
               </tr>
             ) : (
-              tables.items.map((item) => (
+              tables?.items?.map((item) => (
                 <tr
                   className={
                     "border-b-4 border-black border-solid hover:bg-red-900 " +

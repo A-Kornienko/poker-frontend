@@ -1,18 +1,14 @@
 import { memo } from "react";
+import { useTablePotsState } from "../store/selectors/selectTablePotsState";
 
 interface TablePotsProps {
-  banks: { rake: 0, items: {} };
-  currency: string;
   animatedBanks: {};
   isRakeAnimated: boolean;
 }
 
-const TablePots =({
-  banks,
-  currency,
-  animatedBanks,
-  isRakeAnimated,
-}: TablePotsProps) => {
+const TablePots = ({ animatedBanks, isRakeAnimated }: TablePotsProps) => {
+  const { banks, currency } = useTablePotsState();
+
   if (!Object.keys(banks.items).length) {
     return null;
   }
@@ -26,8 +22,7 @@ const TablePots =({
             animatedBanks[key] ? "my-animate-pulse" : ""
           }`}
         >
-          {index === 0 ? "Pot" : `Side Pot ${index}`}:
-          {bank.sum} {currency}
+          {index === 0 ? "Pot" : `Side Pot ${index}`}:{bank.sum} {currency}
         </div>
       ))}
 
@@ -40,6 +35,6 @@ const TablePots =({
       </div>
     </div>
   );
-}
+};
 
 export default memo(TablePots);

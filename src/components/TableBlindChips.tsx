@@ -1,18 +1,12 @@
 import { memo } from "react";
 import BlindChip from "./BlindChip";
 import { GRID_AREAS } from "../constants/pokerGameConstants";
+import { useTableBlindChipsState } from "../store/selectors/selectTableBlindChipsState";
 
-interface TableBlindChipsProps {
-  dealerPlace: number;
-  smallBlindPlace: number;
-  bigBlindPlace: number;
-}
+const TableBlindChips = () => {
+  const { dealerPlace, smallBlindPlace, bigBlindPlace } =
+    useTableBlindChipsState();
 
-const TableBlindChips = ({
-  dealerPlace,
-  smallBlindPlace,
-  bigBlindPlace,
-}: TableBlindChipsProps) => {
   const chips = [
     { place: dealerPlace, type: "dealer" },
     { place: smallBlindPlace, type: "smallBlind" },
@@ -33,10 +27,10 @@ const TableBlindChips = ({
             >
               <BlindChip type={type} />
             </div>
-          )
+          ),
       )}
     </>
   );
-}
+};
 
 export default memo(TableBlindChips);

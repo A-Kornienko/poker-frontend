@@ -15,7 +15,7 @@ export interface Player {
 
 export interface Bank {
   rake: number;
-  items: { [key: string]: { sum: number; winners: number[] } };
+  items: { [key: string]: { sum: number; winners?: number[] } };
 }
 
 export interface TableData {

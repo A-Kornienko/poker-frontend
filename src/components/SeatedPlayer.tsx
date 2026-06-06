@@ -12,8 +12,7 @@ interface SeatedPlayerProps {
   myPlace: number;
   turnPlace: number;
   currency: string;
-  tableCards: Card[];
-  holeCards: Card[];
+  tableCards: { table: Card[]; player: Card[] };
   isWinner: boolean;
 }
 
@@ -24,7 +23,6 @@ const SeatedPlayer = ({
   turnPlace,
   currency,
   tableCards,
-  holeCards,
   isWinner,
 }: SeatedPlayerProps) => {
   const placeNum = Number(place);
@@ -33,12 +31,12 @@ const SeatedPlayer = ({
 
   const cards = useMemo(
     () => ({
-      table: tableCards,
-      player: isHero ? holeCards : EMPTY_HOLE_CARDS,
+      table: tableCards.table,
+      player: isHero ? tableCards.player : EMPTY_HOLE_CARDS,
     }),
-    [tableCards, holeCards, isHero]
+    [tableCards, isHero]
   );
-
+  
   return (
     <Fragment key={placeNum}>
       <div

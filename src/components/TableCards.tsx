@@ -1,12 +1,10 @@
 import { memo } from "react";
 import { ASSETS } from "../helpers/assets";
-import { Card } from "../types/poker";
+import { useTableCards } from "../store/selectors/selectTableCardsState";
 
-interface TableCardsProps {
-  cards: Card[];
-}
-
-const TableCards = ({ cards }: TableCardsProps) => {
+const TableCards = () => {
+  const cards = useTableCards();
+  
   if (cards.length === 0) {
     return null;
   }

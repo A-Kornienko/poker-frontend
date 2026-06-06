@@ -1,15 +1,12 @@
-import React, { memo } from "react";
-import { TableData } from "../types/poker";
-
-interface TableInfoProps {
-  data: TableData;
-}
+import { useTableState } from "../store/selectors/selectTableState";
 
 /**
  * TableInfo displays table metadata (name, blinds, players, etc.)
  * @returns {JSX.Element} Table information
  */
-const TableInfo = memo(({ data }: TableInfoProps) => (
+const TableInfo = () => {
+  const data = useTableState();
+  return (
   <div className="absolute top-4 left-4 text-white font-semibold drop-shadow text-sm md:text-base">
     <div>
       {data.name} | Правило: {data.rule} | Гравці: {data.countPlayers}/
@@ -37,6 +34,7 @@ const TableInfo = memo(({ data }: TableInfoProps) => (
       Стан: {data.state} | Раунд: {data.round}
     </div>
   </div>
-));
+  )
+};
 
 export default TableInfo;
