@@ -1,20 +1,34 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { TIMERS } from "../constants/pokerGameConstants";
 import { Bank } from "../types/poker";
 
 export const useWinnerAnimation = (bankItems: Bank["items"]) => {
   const [winners, setWinners] = useState<number[]>([]);
+  const timeoutRef = useRef<number | null>(null);
 
   useEffect(() => {
-    if (!bankItems || Object.keys(bankItems).length === 0) return;
+    return () => {
+      if (timeoutRef.current) {
+        window.clearTimeout(timeoutRef.current);
+        timeoutRef.current = null;
+      }
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!bankItems || Array.isArray(bankItems)) return;
 
     const key = Object.keys(bankItems)[0];
-    if (bankItems[key].winners.length === 0) return;
+    const newW = bankItems[key]?.winners || [];
+    if (newW.length === 0) return;
 
-    setWinners(bankItems[key].winners.map(Number));
-    const timeout = setTimeout(() => setWinners([]), TIMERS.WINNERS_DISPLAY);
+    setWinners(newW.map(Number));
+    if (timeoutRef.current) window.clearTimeout(timeoutRef.current);
 
-    return () => clearTimeout(timeout);
+    timeoutRef.current = window.setTimeout(() => {
+      setWinners([]);
+      timeoutRef.current = null;
+    }, TIMERS.WINNERS_DISPLAY);
   }, [bankItems]);
 
   return winners;

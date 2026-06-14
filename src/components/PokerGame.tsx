@@ -12,7 +12,6 @@ import TableBlindChips from "./TableBlindChips";
 import { useNavigate } from "react-router-dom";
 import RebuyModal from "../components/Modals/RebuyModal";
 import Loader from "../components/UI/Loader/Loader";
-// Rebuy hook
 import { useTableState } from "../store/selectors/selectTableState";
 import { useBankAnimation } from "../hooks/useBankAnimation";
 import { useRebuy } from "../hooks/useRebuy";
@@ -36,10 +35,10 @@ export default function PokerTable({ tableId }: PokerTableProps) {
   const { animatedBanks, isRakeAnimated } = useBankAnimation(data.banks);
 
   // Rebuy hook
-  const rebuy = useRebuy(data.id);
+  const rebuy = useRebuy(tableId);
 
   // Leave table hook
-  const leaveTable = useLeaveTable(data.id, () => navigate("/cash-table"));
+  const leaveTable = useLeaveTable(tableId, () => navigate("/cash-table"));
 
   // Player action processing
   const betting = useBetting(tableId, data.betRange);
@@ -51,7 +50,7 @@ export default function PokerTable({ tableId }: PokerTableProps) {
 
   const handleChat = useCallback(() => {
     console.log("handleChat");
-  }, [data.id]);
+  }, [tableId]);
 
   const handleHistoryTable = useCallback(() => {
     console.log("handleHistoryTable");
