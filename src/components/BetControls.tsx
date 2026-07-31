@@ -1,11 +1,5 @@
-import { memo } from "react";
+import { memo, useEffect, useRef } from "react";
 import Loader from "../components/UI/Loader/Loader";
-
-interface BetNavigationItem {
-  label: string;
-  action: string;
-  classes: string;
-}
 
 interface BetControlsProps {
   betNavigation: [] | string[];
@@ -33,8 +27,32 @@ const BetControls = memo(
     onPercentBet,
     isLoading = false,
   }: BetControlsProps) => {
+    const actionPendingRef = useRef(false);
+    const controlsDisabled = isLoading || actionPendingRef.current;
+
+    useEffect(() => {
+      if (!isLoading) {
+        actionPendingRef.current = false;
+      }
+    }, [isLoading]);
+
+    const markActionPending = (pending: boolean) => {
+      actionPendingRef.current = pending;
+    };
+
+    const handleAction = (action: string) => {
+      if (controlsDisabled) return;
+      markActionPending(true);
+      onAction(action);
+    };
+
+    const handleChangeBet = (value: number | string) => {
+      if (controlsDisabled) return;
+      onChangeBet(value);
+    };
+
     // Configuration of betting navigation buttons
-    const betNavigationList: BetNavigationItem[] = [
+    const betNavigationList = [
       {
         label: "FOLD",
         action: "fold",
@@ -62,7 +80,7 @@ const BetControls = memo(
 
     // Filter navigation buttons based on available actions
     const betNavigationFiltered = betNavigationList.filter((btn) =>
-      betNavigation.includes(btn.action)
+      betNavigation.includes(btn.action),
     );
 
     return (
@@ -132,8 +150,8 @@ const BetControls = memo(
               </button>
             ))}
             <button
-              onClick={() => onChangeBet(maxBet)}
-              disabled={isLoading}
+              onClick={() => handleChangeBet(maxBet)}
+              disabled={controlsDisabled}
               className="flex-1 px-2 py-1 rounded-lg bg-red-500 text-white font-bold hover:bg-gray-600"
               aria-label="Go all-in"
             >
@@ -146,8 +164,8 @@ const BetControls = memo(
             {betNavigationFiltered.map((btn) => (
               <button
                 key={btn.action}
-                disabled={isLoading}
-                onClick={() => onAction(btn.action)}
+                disabled={controlsDisabled}
+                onClick={() => handleAction(btn.action)}
                 className={`flex-1 py-1 rounded-lg font-semibold active:translate-y-0.5 transition transform ${btn.classes}`}
                 aria-label={btn.label}
               >
@@ -158,7 +176,7 @@ const BetControls = memo(
         </div>
       </>
     );
-  }
+  },
 );
 
 export default BetControls;
