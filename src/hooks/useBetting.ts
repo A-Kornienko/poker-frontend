@@ -17,7 +17,17 @@ export const useBetting = (tableId: number, betRange?: BetRange) => {
 
   const [fetchAction, isLoading, error] = useFetching(
     async (tableId: number, action: string, amount: number) => {
-      await BetService.bet(tableId, action, amount);
+      const response = await BetService.bet(tableId, action, amount);
+
+      if (response?.data && typeof response.data === "object") {
+        if (response.data.success === false) {
+          throw new Error(response.data.error || "Action failed.");
+        }
+
+        if (response.data.error) {
+          throw new Error(response.data.error);
+        }
+      }
     },
   );
 
