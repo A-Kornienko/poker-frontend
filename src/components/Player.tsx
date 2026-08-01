@@ -1,5 +1,6 @@
 import { memo } from "react";
 import { ASSETS } from "../helpers/assets";
+import { useTurnTimer } from "../hooks/useTurnTimer";
 import { Player as PlayerType, Card } from "../types/poker";
 import TurnTimerBar from "./TurnTimerBar";
 
@@ -26,8 +27,15 @@ const Player = memo(
     isWinner,
     isTurn,
     betExpTime,
-  }: PlayerProps) => (
-    <div
+  }: PlayerProps) => {
+    const timerKey = useTurnTimer({
+      isTurn,
+      betExpTime,
+      playerPlace: player.place,
+    });
+
+    return (
+      <div
       className={`player-${
         player.place
       } flex flex-col items-center justify-center z-10 ${
@@ -106,7 +114,7 @@ const Player = memo(
           <div className="truncate rounded-t-md border-b border-white/10 bg-gray-800 px-1 text-white/60">
             {player.profile.name}
           </div>
-          {isTurn && <TurnTimerBar betExpTime={betExpTime} />}
+          {isTurn && <TurnTimerBar betExpTime={betExpTime} timerKey={timerKey} />}
           <div className="rounded-b-2xl bg-gray-600 px-3 py-1">
             <div className="text-blue-300 flex items-center justify-center text-sm">
               {player.stack} {currency}
@@ -115,7 +123,8 @@ const Player = memo(
         </div>
       </div>
     </div>
-  )
+    );
+  }
 );
 
 export default Player;
