@@ -2,7 +2,7 @@ import { memo, useEffect, useRef } from "react";
 import Loader from "../components/UI/Loader/Loader";
 
 interface BetControlsProps {
-  betNavigation: [] | string[];
+  betNavigation: string[];
   betAmount: number;
   minBet: number;
   maxBet: number;
@@ -86,18 +86,18 @@ const BetControls = memo(
     return (
       <>
         <div
-          className={`fixed bottom-4 right-4 w-full max-w-2xs p-4 bg-zinc-700 rounded-lg shadow-lg space-y-3 md:max-w-xs
+          className={`fixed bottom-4 right-4 w-[calc(100%-1.5rem)] max-w-sm p-4 rounded-2xl border border-white/10 bg-gradient-to-br from-zinc-800 via-zinc-800 to-zinc-900 shadow-[0_20px_45px_rgba(0,0,0,0.35)] backdrop-blur-sm space-y-3 md:max-w-sm
         ${isLoading ? "opacity-50" : "opacity-100"}`}
         >
           {/* Loader */}
           {isLoading && (
-            <div className="absolute inset-0 bg-black opacity-50 z-20 flex items-center justify-center rounded-lg">
+            <div className="absolute inset-0 bg-black/60 z-20 flex items-center justify-center rounded-2xl">
               <Loader />
             </div>
           )}
-          
+
           {/* Controls for entering the bet amount */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 rounded-xl border border-white/10 bg-zinc-950/60 p-2 shadow-inner">
             <input
               type="number"
               disabled={isLoading}
@@ -105,13 +105,13 @@ const BetControls = memo(
               min={minBet}
               max={maxBet}
               onChange={(e) => onChangeBet(e.target.value)}
-              className="w-16 rounded-lg border-gray-300 text-center text-black"
+              className="h-10 w-20 rounded-lg border border-white/10 bg-zinc-900/90 px-2 text-center text-sm font-semibold text-white outline-none focus:border-amber-400 focus:ring-2 focus:ring-amber-400/30"
               aria-label="Bet amount"
             />
             <button
               onClick={() => onChangeBet(betAmount - 1)}
               disabled={isLoading}
-              className="px-2 bg-gray-500 text-white rounded-lg hover:bg-gray-400"
+              className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-zinc-700/80 text-lg font-semibold text-white transition hover:-translate-y-0.5 hover:bg-zinc-600 disabled:cursor-not-allowed disabled:opacity-50"
               aria-label="Decrease bet"
             >
               –
@@ -123,13 +123,13 @@ const BetControls = memo(
               max={maxBet}
               value={betAmount}
               onChange={(e) => onChangeBet(e.target.value)}
-              className="flex-1 accent-blue-500"
+              className="bet-range-slider flex-1"
               aria-label="Bet range slider"
             />
             <button
               onClick={() => onChangeBet(betAmount + 1)}
               disabled={isLoading}
-              className="px-2 bg-gray-500 text-white rounded-lg hover:bg-gray-400"
+              className="flex h-10 w-10 items-center justify-center rounded-lg border border-white/10 bg-zinc-700/80 text-lg font-semibold text-white transition hover:-translate-y-0.5 hover:bg-zinc-600 disabled:cursor-not-allowed disabled:opacity-50"
               aria-label="Increase bet"
             >
               +
@@ -143,7 +143,7 @@ const BetControls = memo(
                 key={percent}
                 onClick={() => onPercentBet(percent)}
                 disabled={isLoading}
-                className="px-2 py-1 rounded-lg bg-gray-500 text-white hover:bg-gray-400"
+                className="flex-1 rounded-xl border border-white/10 bg-zinc-700/80 px-2 py-2 text-sm font-semibold text-white transition hover:-translate-y-0.5 hover:bg-zinc-600 disabled:cursor-not-allowed disabled:opacity-50"
                 aria-label={`Set bet to ${percent}% of max`}
               >
                 {percent}%
@@ -152,7 +152,7 @@ const BetControls = memo(
             <button
               onClick={() => handleChangeBet(maxBet)}
               disabled={controlsDisabled}
-              className="flex-1 px-2 py-1 rounded-lg bg-red-500 text-white font-bold hover:bg-gray-600"
+              className="flex-1 rounded-xl bg-gradient-to-r from-rose-600 to-red-500 px-2 py-2 text-sm font-bold text-white shadow-lg transition hover:-translate-y-0.5 hover:from-rose-500 hover:to-red-400 disabled:cursor-not-allowed disabled:opacity-50"
               aria-label="Go all-in"
             >
               All-in
@@ -166,7 +166,7 @@ const BetControls = memo(
                 key={btn.action}
                 disabled={controlsDisabled}
                 onClick={() => handleAction(btn.action)}
-                className={`flex-1 py-1 rounded-lg font-semibold active:translate-y-0.5 transition transform ${btn.classes}`}
+                className={`flex-1 rounded-xl border border-white/10 py-2 text-sm font-semibold shadow-md transition hover:-translate-y-0.5 active:translate-y-0.5 ${btn.classes}`}
                 aria-label={btn.label}
               >
                 {btn.label}
