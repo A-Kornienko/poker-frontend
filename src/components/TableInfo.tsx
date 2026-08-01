@@ -9,29 +9,29 @@ const TableInfo = () => {
   return (
   <div className="absolute top-4 left-4 text-white font-semibold drop-shadow text-sm md:text-base">
     <div>
-      {data.name} | Правило: {data.rule} | Гравці: {data.countPlayers}/
+      {data.name} | {data.rule} | Players: {data.countPlayers}/
       {data.limitPlayers}
     </div>
     <div>
-      Блайнди: {data.smallBlind}/{data.bigBlind} | Бай-ін: {data.buyIn}
+      Blinds: {data.smallBlind}/{data.bigBlind} | Buy-in: {data.buyIn}
     </div>
     <div>
-      Дилер: {data.dealerPlace} | МБ: {data.smallBlindPlace} | ВБ:{" "}
+      Dealer: {data.dealerPlace} | SB: {data.smallBlindPlace} | BB:{" "}
       {data.bigBlindPlace}
     </div>
     <div>
-      Хід: {data.turnPlace} | Останнє слово: {data.lastWordPlace} | Моя позиція:{" "}
+      Turn: {data.turnPlace} | Last Word: {data.lastWordPlace} | My Position:{" "}
       {data.myPlace}
     </div>
     <div>
-      Макс. ставка: {data.maxBet} | Діапазон ставок: {data.betRange?.min} -{" "}
+      Current Bet: {data.maxBet} | Bet Range: {data.betRange?.min} - {" "}
       {data.betRange?.max}
     </div>
     <div>
-      Мій ранг: {data.myPrize?.rank} | Мій виграш: {data.myPrize?.sum}
+      Rank: {data.myPrize?.rank} | My Prize: {data.myPrize?.sum}
     </div>
     <div>
-      Стан: {data.state} | Раунд: {data.round}
+      State: {data.state} | Round: {data.round}
     </div>
   </div>
   )
