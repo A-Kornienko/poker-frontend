@@ -6,6 +6,7 @@ export interface Card {
 export interface Player {
   place: string;
   betExpTime?: number;
+  cards?: Card[];
   profile: { name: string };
   stack: number;
   bet: number;

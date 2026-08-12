@@ -6,6 +6,7 @@ import { useAuth } from "../context/AuthContext";
 import { useTableSSE } from "./useTableSSE";
 
 import { updateTableState } from "../store/tableStateStore";
+import { updateTableStateUI } from "../store/tableStateStoreUI";
 import type { TableData } from "../types/poker";
 
 type Props = {
@@ -24,6 +25,8 @@ export const useTableConnection = ({ tableId }: Props) => {
     const newData: TableData = JSON.parse(event.data);
 
     updateTableState(newData);
+
+    updateTableStateUI(newData);
 
     if (!initialDataLoaded.current) {
       initialDataLoaded.current = true;
@@ -45,4 +48,4 @@ export const useTableConnection = ({ tableId }: Props) => {
   return {
     isInitialLoading,
   };
-}
+};

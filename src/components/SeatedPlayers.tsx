@@ -2,12 +2,31 @@ import { memo } from "react";
 import SeatedPlayer from "./SeatedPlayer";
 import { useSeatedPlayersState } from "../store/selectors/selectSeatedPlayersState";
 import { useWinnerAnimation } from "../hooks/useWinnerAnimation";
+import { presentationRegistry } from "../store/presentationRegistry";
+import { deactivatePresentation } from "../store/tableStateStoreUI";
 
 const SeatedPlayers = () => {
-  const { players, myPlace, turnPlace, currency, cards, winners } =
-    useSeatedPlayersState();
+  const {
+    players,
+    myPlace,
+    turnPlace,
+    currency,
+    cards,
+    state,
+    winners,
+    winnerActive,
+  } = useSeatedPlayersState();
 
-  const winnersPlayers = useWinnerAnimation(winners);
+  useWinnerAnimation({
+    isActive: winnerActive,
+    onComplete: () => {
+      deactivatePresentation(presentationRegistry.winner);
+    },
+  });
+
+  const winnerPlaces = Object.values(winners).flatMap(
+    (item) => item.winners ?? [],
+  );
 
   return (
     <>
@@ -20,7 +39,8 @@ const SeatedPlayers = () => {
           turnPlace={turnPlace}
           currency={currency}
           tableCards={cards}
-          isWinner={winnersPlayers.includes(Number(place))}
+          tableState={state}
+          isWinner={winnerPlaces.includes(Number(place))}
         />
       ))}
     </>

@@ -13,6 +13,7 @@ interface SeatedPlayerProps {
   turnPlace: number;
   currency: string;
   tableCards: { table: Card[]; player: Card[] };
+  tableState: string;
   isWinner: boolean;
 }
 
@@ -23,6 +24,7 @@ const SeatedPlayer = ({
   turnPlace,
   currency,
   tableCards,
+  tableState,
   isWinner,
 }: SeatedPlayerProps) => {
   const placeNum = Number(place);
@@ -66,6 +68,7 @@ const SeatedPlayer = ({
           currency={currency}
           isWinner={isWinner}
           isTurn={isTurn}
+          state={tableState}
           betExpTime={isTurn ? player.betExpTime : 0}
         />
       </div>
