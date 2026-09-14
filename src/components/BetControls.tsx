@@ -1,4 +1,4 @@
-import { memo, useEffect, useRef } from "react";
+import { memo, useEffect, useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import Loader from "../components/UI/Loader/Loader";
 
 interface BetControlsProps {
@@ -28,6 +28,13 @@ const BetControls = memo(
     isLoading = false,
   }: BetControlsProps) => {
     const actionPendingRef = useRef(false);
+    const dragStartRef = useRef<{
+      startX: number;
+      startY: number;
+      originX: number;
+      originY: number;
+    } | null>(null);
+    const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
     const controlsDisabled = isLoading || actionPendingRef.current;
 
     useEffect(() => {
@@ -35,6 +42,34 @@ const BetControls = memo(
         actionPendingRef.current = false;
       }
     }, [isLoading]);
+
+    useEffect(() => {
+      const handlePointerMove = (event: PointerEvent) => {
+        if (!dragStartRef.current) {
+          return;
+        }
+
+        const deltaX = event.clientX - dragStartRef.current.startX;
+        const deltaY = event.clientY - dragStartRef.current.startY;
+
+        setDragOffset({
+          x: dragStartRef.current.originX + deltaX,
+          y: dragStartRef.current.originY + deltaY,
+        });
+      };
+
+      const handlePointerUp = () => {
+        dragStartRef.current = null;
+      };
+
+      window.addEventListener("pointermove", handlePointerMove);
+      window.addEventListener("pointerup", handlePointerUp);
+
+      return () => {
+        window.removeEventListener("pointermove", handlePointerMove);
+        window.removeEventListener("pointerup", handlePointerUp);
+      };
+    }, []);
 
     const markActionPending = (pending: boolean) => {
       actionPendingRef.current = pending;
@@ -49,6 +84,21 @@ const BetControls = memo(
     const handleChangeBet = (value: number | string) => {
       if (controlsDisabled) return;
       onChangeBet(value);
+    };
+
+    const handleDragStart = (event: ReactPointerEvent<HTMLDivElement>) => {
+      const target = event.target as HTMLElement;
+      if (target.closest("button") || target.closest("input")) {
+        return;
+      }
+
+      event.preventDefault();
+      dragStartRef.current = {
+        startX: event.clientX,
+        startY: event.clientY,
+        originX: dragOffset.x,
+        originY: dragOffset.y,
+      };
     };
 
     // Configuration of betting navigation buttons
@@ -88,7 +138,18 @@ const BetControls = memo(
         <div
           className={`fixed bottom-4 right-4 w-[calc(100%-1.5rem)] max-w-sm p-4 rounded-2xl border border-white/10 bg-gradient-to-br from-zinc-800 via-zinc-800 to-zinc-900 shadow-[0_20px_45px_rgba(0,0,0,0.35)] backdrop-blur-sm space-y-3 md:max-w-sm
         ${isLoading ? "opacity-50" : "opacity-100"}`}
+          style={{ transform: `translate(${dragOffset.x}px, ${dragOffset.y}px)` }}
         >
+          <div
+            className="mb-2 flex cursor-grab items-center justify-center select-none rounded-lg border border-white/10 bg-zinc-950/40 px-2 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-zinc-400 active:cursor-grabbing"
+            onPointerDown={handleDragStart}
+            aria-label="Drag betting controls"
+            role="button"
+            tabIndex={0}
+          >
+            <span className="text-zinc-300">⋮⋮⋮</span>
+          </div>
+
           {/* Loader */}
           {isLoading && (
             <div className="absolute inset-0 bg-black/60 z-20 flex items-center justify-center rounded-2xl">
