@@ -50,7 +50,7 @@ const SeatedPlayer = ({
       >
         {player.bet > 0 && (
           <div className="place-self-center">
-            <ChipsBlock />
+            <ChipsBlock bet={player.bet} />
             <span className="text-white text-sm font-bold text-center ml-3">
               {player.bet} {currency}
             </span>
