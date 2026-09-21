@@ -13,7 +13,7 @@ const TableCards = () => {
     <div className="absolute left-1/2 top-[40%] -translate-x-1/2 flex gap-2 z-10">
       {cards.map((card, idx) => (
         <img
-          key={idx}
+          key={`${card.suit}-${card.value}`}
           src={ASSETS.CARDS(card.suit, card.value)}
           alt={`Table Card ${idx + 1}`}
           className="w-12 h-20 rounded shadow-md my-animate-deal-card md:w-16 md:h-24"
