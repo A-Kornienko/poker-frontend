@@ -35,8 +35,6 @@ const Player = memo(
       playerPlace: player.place,
     });
 
-    // console.log("player.cards:", player.cards, "cards.player:", cards.player);
-    // const normalizedRound = (round ?? "").toLowerCase();
     const normalizedState = (state ?? "").toLowerCase();
     const heroHoleCards = Array.isArray(cards.player) ? cards.player : [];
     const playerHoleCards = Array.isArray(player.cards) ? player.cards : [];
@@ -47,7 +45,6 @@ const Player = memo(
           ? heroHoleCards
           : [];
 
-    // const activeRounds = ["preflop", "flop", "turn", "river"];
     const activeStates = ["run"];
     const isActiveRound = activeStates.some((currentState) =>
       normalizedState.includes(currentState),

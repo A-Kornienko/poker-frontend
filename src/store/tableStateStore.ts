@@ -53,8 +53,12 @@ export const subscribeTableState = (listener: () => void) => {
 
 export const getTableStateSnapshot = (): TableData => currentState;
 
-export const updateTableState = (newData: Partial<TableData>) => {
-  currentState = { ...currentState, ...newData };
-  if (DEBUG) console.log("[tableStateStore] updated", currentState);
+export const setTableState = (nextState: TableData) => {  
+  currentState = nextState;
+
+  if (DEBUG) {
+    console.log("[tableStateStore] updated", currentState);
+  }
+
   notifyListeners();
 };

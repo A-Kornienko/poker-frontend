@@ -87,15 +87,9 @@ const updatePresentationSnapshot = () => {
   };
 };
 
-export const updateTableStateUI = (newData: Partial<TableData>) => {
+export const setTableStateUI = (nextState: TableData) => {
   const previousState = currentTableState;
-
-  currentTableState = {
-    ...currentTableState,
-    ...newData,
-  };
-
-  const nextState = currentTableState;
+  currentTableState = nextState;
 
   if (DEBUG) {
     console.log("[tableStateStoreUI]", {
@@ -113,7 +107,6 @@ export const updateTableStateUI = (newData: Partial<TableData>) => {
   }
 
   updatePresentationSnapshot();
-
   notifyListeners();
 };
 
