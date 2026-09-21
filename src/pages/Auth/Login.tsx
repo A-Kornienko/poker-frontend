@@ -36,14 +36,14 @@ export default function Login() {
 
         // Save access_token & refresh_token
         Cookies.set("access_token", token, {
-          expires: 1 / 24,
-          secure: true,
-          sameSite: "strict",
+          expires: 30,
+          path: '/',
+          sameSite: 'lax'
         });
         Cookies.set("refresh_token", refresh_token, {
           expires: 30,
-          secure: true,
-          sameSite: "strict",
+          path: '/',
+          sameSite: 'lax'
         });
 
         // Save userPayload in context (login, email)

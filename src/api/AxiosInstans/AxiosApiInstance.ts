@@ -3,9 +3,7 @@ import Cookies from 'js-cookie';
 import { getApiRoute } from '../../helpers/router';
 import { clearAuthTokens } from '../../helpers/authUtils';
 
-const AxiosApiInstance = axios.create({
-  // withCredentials: true, 
-});
+const AxiosApiInstance = axios.create({});
 
 let isRefreshing = false;
 let failedQueue: Array<{ resolve: (value: any) => void; reject: (reason?: any) => void }> = [];
@@ -56,15 +54,22 @@ AxiosApiInstance.interceptors.response.use(
         const refreshResponse = await axios.post(
           getApiRoute('token/refresh'),
           { refresh_token: refreshToken },
-          // { withCredentials: true } // so that the refresh_token cookie is sent
         );
 
         const { token: newAccessToken, refresh_token: newRefreshToken } = refreshResponse.data;
 
         // Updating cookies
-        Cookies.set('access_token', newAccessToken, { expires: 1 / 24, secure: true, sameSite: 'strict' });
+        Cookies.set('access_token', newAccessToken, {
+          expires: 1 / 24,
+          path: '/',
+          sameSite: 'lax'
+        });
         if (newRefreshToken) {
-          Cookies.set('refresh_token', newRefreshToken, { expires: 30, secure: true, sameSite: 'strict' });
+            Cookies.set('refresh_token', newRefreshToken, {
+              expires: 30,
+              path: '/',
+              sameSite: 'lax'
+            });
         }
 
         const tokenToUse = newAccessToken;

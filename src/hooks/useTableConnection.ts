@@ -36,6 +36,7 @@ export const useTableConnection = ({ tableId }: Props) => {
 
   const handleAuthError = useCallback(() => {
     logout();
+    console.error("Authentication error. Logging out and redirecting to login page.");
     navigate("/login");
   }, [logout, navigate]);
 

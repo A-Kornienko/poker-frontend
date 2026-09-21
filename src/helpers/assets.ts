@@ -6,7 +6,7 @@ import BetBlack100 from "../assets/images/icons/bet_black_100.svg";
 import BetPurple500 from "../assets/images/icons/bet_purple_500.svg";
 import BetYellow1000 from "../assets/images/icons/bet_yellow_1000.svg";
 import RebuyChip from "../assets/images/icons/rebuy-chip.png";
-import PokerTable from "../assets/images/poker-table.png";
+import PokerTable from "../assets/images/poker-table.jpg";
 import LeaveTable from "../assets/images/icons/leave-table.svg";
 import Chat from "../assets/images/icons/chat.svg";
 import Settings from "../assets/images/icons/settings.svg";

@@ -22,7 +22,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     if (access_token) {
       try {
         const decodedUser = jwtDecode(access_token);
-        // get username, email, roles і т.д.
+        // get username, email, roles and other user info
         setUser(decodedUser);
       } catch (error) {
         Cookies.remove("access_token");
