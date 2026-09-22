@@ -13,6 +13,7 @@ const PokerBottomNavBar = memo(({ onLeaveTableClick, onChatClick }) => (
         onClick={onLeaveTableClick}
         className="rounded-full p-2 hover:scale-110 hover:opacity-80 transition-transform duration-300"
         aria-label="leave the table"
+        title="Leave"
       >
         <img
           src={ASSETS.LEAVE_TABLE}
@@ -24,6 +25,7 @@ const PokerBottomNavBar = memo(({ onLeaveTableClick, onChatClick }) => (
         onClick={onChatClick}
         className="rounded-full p-2 hover:scale-110 hover:opacity-80 transition-transform duration-300"
         aria-label="Chat"
+        title="Chat"
       >
         <img src={ASSETS.CHAT} className="h-8 w-8 md:h-10 md:w-10" alt="Chat" />
       </button>

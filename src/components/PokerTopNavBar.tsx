@@ -15,6 +15,7 @@ const PokerTopNavBar = memo(({ onRebuyClick, onSettingsClick }) => (
           type="button"
           role="img"
           aria-label="rebuy"
+          title="Rebuy"
         >
           <img
             src={ASSETS.REBUY_CHIP}
@@ -26,8 +27,8 @@ const PokerTopNavBar = memo(({ onRebuyClick, onSettingsClick }) => (
           onClick={onSettingsClick}
           className="hover:scale-110 hover:opacity-80 transition-transform duration-300"
           type="button"
-          role="img"
           aria-label="settings"
+          title="History"
         >
           <img
             src={ASSETS.SETTINGS}
