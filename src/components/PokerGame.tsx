@@ -1,4 +1,4 @@
-import { useCallback, useMemo } from "react";
+import { useCallback, useMemo, useState } from "react";
 import TableCards from "./TableCards";
 import SeatedPlayers from "./SeatedPlayers";
 import { ASSETS } from "../helpers/assets";
@@ -18,6 +18,8 @@ import { useRebuy } from "../hooks/useRebuy";
 import { useLeaveTable } from "../hooks/useLeaveTable";
 import { useBetting } from "../hooks/useBetting";
 import { useTableConnection } from "../hooks/useTableConnection";
+import ChatPanel from "./ChatPanel";
+import { useTableChat } from "../hooks/useTableChat";
 
 interface PokerTableProps {
   tableId: number;
@@ -48,9 +50,12 @@ export default function PokerTable({ tableId }: PokerTableProps) {
     tableId,
   });
 
+  const [isChatOpen, setIsChatOpen] = useState(false);
+  const chat = useTableChat(tableId, isChatOpen);
+
   const handleChat = useCallback(() => {
-    console.log("handleChat");
-  }, [tableId]);
+    setIsChatOpen((isOpen) => !isOpen);
+  }, []);
 
   const handleHistoryTable = useCallback(() => {
     console.log("handleHistoryTable");
@@ -156,6 +161,20 @@ export default function PokerTable({ tableId }: PokerTableProps) {
         onLeaveTableClick={leaveTable.leaveTable}
         onChatClick={handleChat}
       />
+
+      {isChatOpen && (
+        <ChatPanel
+          messages={chat.messages}
+          isLoading={chat.isLoading}
+          hasLoadedHistory={chat.hasLoadedHistory}
+          hasMoreHistory={chat.hasMoreHistory}
+          isSending={chat.isSending}
+          error={chat.error}
+          onSend={chat.sendMessage}
+          onLoadOlder={chat.loadHistory}
+          onClose={() => setIsChatOpen(false)}
+        />
+      )}
     </div>
   );
 }
