@@ -20,6 +20,7 @@ import { useBetting } from "../hooks/useBetting";
 import { useTableConnection } from "../hooks/useTableConnection";
 import ChatPanel from "./ChatPanel";
 import { useTableChat } from "../hooks/useTableChat";
+import HandHistoryPanel from "./HandHistoryPanel";
 
 interface PokerTableProps {
   tableId: number;
@@ -57,8 +58,9 @@ export default function PokerTable({ tableId }: PokerTableProps) {
     setIsChatOpen((isOpen) => !isOpen);
   }, []);
 
+  const [isHistoryOpen, setIsHistoryOpen] = useState(false);
   const handleHistoryTable = useCallback(() => {
-    console.log("handleHistoryTable");
+    setIsHistoryOpen(true);
   }, []);
 
   const errorMessages = useMemo(
@@ -102,8 +104,15 @@ export default function PokerTable({ tableId }: PokerTableProps) {
       {/* Poker  */}
       <PokerTopNavBar
         onRebuyClick={rebuy.openModal}
-        onPokerHistoryClick={handleHistoryTable}
+        onHistoryClick={handleHistoryTable}
       />
+
+      {isHistoryOpen && (
+        <HandHistoryPanel
+          tableId={tableId}
+          onClose={() => setIsHistoryOpen(false)}
+        />
+      )}
 
       {/* Rebuy Modal */}
       <RebuyModal

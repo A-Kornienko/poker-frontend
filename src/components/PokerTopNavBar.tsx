@@ -1,11 +1,16 @@
 import { memo } from "react";
 import { ASSETS } from "../helpers/assets";
 
+interface PokerTopNavBarProps {
+  onRebuyClick: () => void;
+  onHistoryClick: () => void;
+}
+
 /**
  * PokerTopNavBar displays icons for rebuys and settings
  * @returns {JSX.Element} PokerTopNavBar (rebuys, settings)
  */
-const PokerTopNavBar = memo(({ onRebuyClick, onSettingsClick }) => (
+const PokerTopNavBar = memo(({ onRebuyClick, onHistoryClick }: PokerTopNavBarProps) => (
   <>
     <div className="flex justify-end items-center px-4 py-2 md:px-8 md:py-4">
       <div className="flex gap-4 items-center">
@@ -24,16 +29,16 @@ const PokerTopNavBar = memo(({ onRebuyClick, onSettingsClick }) => (
           />
         </button>
         <button
-          onClick={onSettingsClick}
+          onClick={onHistoryClick}
           className="hover:scale-110 hover:opacity-80 transition-transform duration-300"
           type="button"
-          aria-label="settings"
+          aria-label="history"
           title="History"
         >
           <img
-            src={ASSETS.SETTINGS}
+            src={ASSETS.HISTORY_TABLE}
             className="h-8 w-8 md:h-10 md:w-10"
-            alt="Settings"
+            alt="History"
           />
         </button>
       </div>

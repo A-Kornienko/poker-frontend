@@ -9,7 +9,7 @@ import RebuyChip from "../assets/images/icons/rebuy-chip.png";
 import PokerTable from "../assets/images/poker-table.jpg";
 import LeaveTable from "../assets/images/icons/leave-table.svg";
 import Chat from "../assets/images/icons/chat.svg";
-import Settings from "../assets/images/icons/settings.svg";
+import HistoryTable from "../assets/images/icons/history-table.svg";
 
 interface Assets {
   CARD_BACK: string;
@@ -23,7 +23,7 @@ interface Assets {
   POKER_TABLE: string;
   LEAVE_TABLE: string;
   CHAT: string;
-  SETTINGS: string;
+  HISTORY_TABLE: string;
   CARDS: (suit: string, value: string) => string;
 }
 
@@ -39,6 +39,6 @@ export const ASSETS: Assets = {
   POKER_TABLE: PokerTable,
   LEAVE_TABLE: LeaveTable,
   CHAT: Chat,
-  SETTINGS: Settings,
+  HISTORY_TABLE: HistoryTable,
   CARDS: (suit: string, value: string) => `/src/assets/images/cards/${suit}/${value}.webp`,
 };
