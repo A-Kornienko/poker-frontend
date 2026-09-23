@@ -28,6 +28,49 @@ const formatAmount = (amount: number): string => {
 const shortSession = (session: string): string =>
   `${session.slice(0, 8)}...${session.slice(-6)}`;
 
+const getDateTimeValue = (value: string): number | null => {
+  const match = value.match(
+    /^(\d{4})-(\d{2})-(\d{2})T(\d{2}):(\d{2})(?::(\d{2}))?$/,
+  );
+
+  if (!match) return null;
+
+  const [, year, month, day, hours, minutes, seconds = "0"] = match;
+  const localDate = new Date(
+    Number(year),
+    Number(month) - 1,
+    Number(day),
+    Number(hours),
+    Number(minutes),
+    Number(seconds),
+  );
+
+  const timestamp = localDate.getTime();
+  
+  return Number.isNaN(timestamp) ? null : timestamp;
+};
+
+const formatDateForApi = (value: string): string | undefined => {
+  const timestamp = getDateTimeValue(value);
+
+  return timestamp === null ? undefined : new Date(timestamp).toISOString();
+};
+
+const formatDateTime = (value: string | number): string => {
+  const numericValue = Number(value);
+  const date =
+    typeof value === "number" || !Number.isNaN(numericValue)
+      ? new Date(numericValue < 1_000_000_000_000 ? numericValue * 1000 : numericValue)
+      : new Date(value);
+
+  if (Number.isNaN(date.getTime())) return "Unknown time";
+
+  return new Intl.DateTimeFormat(undefined, {
+    dateStyle: "short",
+    timeStyle: "short",
+  }).format(date);
+};
+
 const CardImage = ({ card, index }: { card: HistoryCard; index: number }) => (
   <img
     src={ASSETS.CARDS(card.suit, card.view)}
@@ -194,21 +237,38 @@ const HandHistoryPanel = ({ tableId, onClose }: HandHistoryPanelProps) => {
   const [details, setDetails] = useState<HandHistoryDetails | null>(null);
   const [isDetailsLoading, setIsDetailsLoading] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [isLoadingMore, setIsLoadingMore] = useState(false);
+  const [isPageLoading, setIsPageLoading] = useState(false);
+  const [dateFrom, setDateFrom] = useState("");
+  const [dateTo, setDateTo] = useState("");
+  const [activeDateFrom, setActiveDateFrom] = useState("");
+  const [activeDateTo, setActiveDateTo] = useState("");
   const [error, setError] = useState<string | null>(null);
+  const dateFromValue = getDateTimeValue(dateFrom);
+  const dateToValue = getDateTimeValue(dateTo);
+  const isDateRangeInvalid = Boolean(
+    dateFromValue !== null &&
+      dateToValue !== null &&
+      dateFromValue > dateToValue,
+  );
 
-  const loadHistory = useCallback(async () => {
-    setIsLoading(true);
+  const hasActiveDateFilter = Boolean(activeDateFrom || activeDateTo);
+
+  const loadHistory = useCallback(async (page = 1, dateRange = {}) => {
+    setIsLoading(page === 1);
+    setIsPageLoading(page > 1);
     setError(null);
     setOpenSession(null);
     setDetails(null);
 
     try {
-      setHistory(await HandHistoryService.getTableHistory(tableId));
+      setHistory(
+        await HandHistoryService.getTableHistory(tableId, page, 20, dateRange),
+      );
     } catch {
       setError("Unable to load hand history.");
     } finally {
       setIsLoading(false);
+      setIsPageLoading(false);
     }
   }, [tableId]);
 
@@ -238,25 +298,31 @@ const HandHistoryPanel = ({ tableId, onClose }: HandHistoryPanelProps) => {
     }
   };
 
-  const loadMore = async () => {
-    if (!history || history.pagination.page >= history.pagination.pages) return;
+  const applyDateFilter = () => {
+    if (isDateRangeInvalid) return;
 
-    setIsLoadingMore(true);
-    setError(null);
-    try {
-      const nextPage = await HandHistoryService.getTableHistory(
-        tableId,
-        history.pagination.page + 1,
-      );
-      setHistory({
-        items: [...history.items, ...nextPage.items],
-        pagination: nextPage.pagination,
-      });
-    } catch {
-      setError("Unable to load more hand history.");
-    } finally {
-      setIsLoadingMore(false);
-    }
+    const apiDateFrom = formatDateForApi(dateFrom);
+    const apiDateTo = formatDateForApi(dateTo);
+
+    setActiveDateFrom(apiDateFrom ?? "");
+    setActiveDateTo(apiDateTo ?? "");
+    void loadHistory(1, { dateFrom: apiDateFrom, dateTo: apiDateTo });
+  };
+
+  const resetDateFilter = () => {
+    setDateFrom("");
+    setDateTo("");
+    setActiveDateFrom("");
+    setActiveDateTo("");
+    void loadHistory(1, { dateFrom: "", dateTo: "" });
+  };
+
+  const changePage = (page: number) => {
+    if (!history || page < 1 || page > history.pagination.pages) return;
+    void loadHistory(page, {
+      dateFrom: activeDateFrom,
+      dateTo: activeDateTo,
+    });
   };
 
   return (
@@ -283,11 +349,56 @@ const HandHistoryPanel = ({ tableId, onClose }: HandHistoryPanelProps) => {
 
         {error && <ErrorMessage message={error} />}
 
+        <div className="flex flex-wrap items-end gap-3 border-b border-zinc-800 px-6 py-4">
+          <label className="flex flex-col gap-1 text-xs uppercase tracking-wider text-zinc-500">
+            From
+            <input
+              type="datetime-local"
+              value={dateFrom}
+              max={dateTo || undefined}
+              onChange={(event) => setDateFrom(event.target.value)}
+              className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm normal-case tracking-normal text-zinc-200 outline-none accent-amber-500 focus:border-amber-500 [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:opacity-100 [&::-webkit-calendar-picker-indicator]:brightness-150 [&::-webkit-calendar-picker-indicator]:sepia [&::-webkit-calendar-picker-indicator]:saturate-[5] [&::-webkit-calendar-picker-indicator]:hue-rotate-[355deg]"
+            />
+          </label>
+          <label className="flex flex-col gap-1 text-xs uppercase tracking-wider text-zinc-500">
+            To
+            <input
+              type="datetime-local"
+              value={dateTo}
+              min={dateFrom || undefined}
+              onChange={(event) => setDateTo(event.target.value)}
+              className="rounded-md border border-zinc-700 bg-zinc-900 px-3 py-2 text-sm normal-case tracking-normal text-zinc-200 outline-none accent-amber-500 focus:border-amber-500 [color-scheme:dark] [&::-webkit-calendar-picker-indicator]:opacity-100 [&::-webkit-calendar-picker-indicator]:brightness-150 [&::-webkit-calendar-picker-indicator]:sepia [&::-webkit-calendar-picker-indicator]:saturate-[5] [&::-webkit-calendar-picker-indicator]:hue-rotate-[355deg]"
+            />
+          </label>
+          <button
+            type="button"
+            onClick={applyDateFilter}
+            disabled={isDateRangeInvalid}
+            className="rounded-md bg-amber-500 px-5 py-2 text-sm font-semibold text-zinc-950 transition hover:bg-amber-400 disabled:cursor-not-allowed disabled:opacity-40"
+          >
+            Apply
+          </button>
+          <button
+            type="button"
+            onClick={resetDateFilter}
+            className="rounded-md border border-zinc-700 px-5 py-2 text-sm font-semibold text-zinc-300 transition hover:border-amber-500 hover:text-amber-300"
+          >
+            Reset
+          </button>
+          {isDateRangeInvalid && (
+            <p className="basis-full text-sm text-red-400">
+              The start date must be earlier than the end date.
+            </p>
+          )}
+        </div>
+
         <div className="min-h-0 flex-1 overflow-y-auto p-4 md:p-6">
           {isLoading ? (
             <div className="flex justify-center py-16"><Loader /></div>
           ) : history?.items.length === 0 ? (
-            <p className="py-16 text-center text-zinc-500">No hand history yet</p>
+            <p className="py-16 text-center text-zinc-500">
+              {hasActiveDateFilter ? "No hands found for selected dates" : "No hand history yet"}
+            </p>
           ) : (
             <div className="space-y-3">
               {history?.items.map((item: HandHistoryItem) => (
@@ -299,10 +410,15 @@ const HandHistoryPanel = ({ tableId, onClose }: HandHistoryPanelProps) => {
                     type="button"
                     onClick={() => void handleSessionClick(item.session)}
                     aria-expanded={openSession === item.session}
-                    className="grid w-full items-center gap-4 px-4 py-4 text-left transition hover:bg-zinc-800/80 md:grid-cols-[1.5fr_1fr_1fr_auto]"
+                    className="grid w-full items-center gap-4 px-4 py-4 text-left transition hover:bg-zinc-800/80 md:grid-cols-[1.4fr_1.5fr_1fr_1fr_auto]"
                   >
                     <span className="font-mono text-sm text-zinc-200">
                       {shortSession(item.session)}
+                    </span>
+                    <span className="text-sm text-zinc-400">
+                      {formatDateTime(item.startedAt)}
+                      <span className="mx-2 text-zinc-600">-</span>
+                      {formatDateTime(item.endedAt)}
                     </span>
                     <span className="text-sm text-zinc-400">
                       Winner: {item.winners.join(", ") || "Unknown"}
@@ -324,15 +440,28 @@ const HandHistoryPanel = ({ tableId, onClose }: HandHistoryPanelProps) => {
                 </div>
               ))}
 
-              {history && history.pagination.page < history.pagination.pages && (
-                <button
-                  type="button"
-                  onClick={() => void loadMore()}
-                  disabled={isLoadingMore}
-                  className="mx-auto mt-6 block rounded-md border border-amber-500/50 px-5 py-2 text-sm font-semibold text-amber-300 transition hover:bg-amber-500/10 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  {isLoadingMore ? "Loading..." : "Load more"}
-                </button>
+              {history && history.pagination.pages > 1 && (
+                <div className="mt-6 flex items-center justify-center gap-4">
+                  <button
+                    type="button"
+                    onClick={() => changePage(history.pagination.page - 1)}
+                    disabled={history.pagination.page === 1 || isPageLoading}
+                    className="rounded-md border border-zinc-700 px-4 py-2 text-sm text-zinc-300 transition hover:border-amber-500 hover:text-amber-300 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    Previous
+                  </button>
+                  <span className="text-sm text-zinc-500">
+                    Page {history.pagination.page} of {history.pagination.pages}
+                  </span>
+                  <button
+                    type="button"
+                    onClick={() => changePage(history.pagination.page + 1)}
+                    disabled={history.pagination.page === history.pagination.pages || isPageLoading}
+                    className="rounded-md border border-zinc-700 px-4 py-2 text-sm text-zinc-300 transition hover:border-amber-500 hover:text-amber-300 disabled:cursor-not-allowed disabled:opacity-40"
+                  >
+                    Next
+                  </button>
+                </div>
               )}
             </div>
           )}

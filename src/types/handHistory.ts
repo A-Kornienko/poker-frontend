@@ -8,6 +8,8 @@ export interface HistoryCard {
 
 export interface HandHistoryItem {
   session: string;
+  startedAt: string | number;
+  endedAt: string | number;
   cards?: HistoryCard[];
   winners: string[];
   bank: number;
