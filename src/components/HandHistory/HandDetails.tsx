@@ -1,5 +1,5 @@
 import { ActionList } from "./ActionList";
-import { CardImage } from "./CardImage";
+import { CardImage } from "../Cards/CardImage";
 import { formatAmount } from "./formatters";
 import { HandHistoryDetails } from "../../types/handHistory";
 
@@ -14,8 +14,12 @@ export const HandDetails = ({ details }: HandDetailsProps) => (
         Table cards
       </h3>
       <div className="flex flex-wrap gap-2">
-        {details.cards.map((card, index) => (
-          <CardImage card={card} index={index} key={`${card.suit}-${card.value}`} />
+        {details.cards.map((card) => (
+          <CardImage
+            card={card}
+            variant="history"
+            key={`${card.suit}-${card.value}`}
+          />
         ))}
       </div>
     </section>
@@ -50,10 +54,10 @@ export const HandDetails = ({ details }: HandDetailsProps) => (
             </div>
             <div className="flex min-h-20 gap-2">
               {player.cards.length > 0 ? (
-                player.cards.map((card, index) => (
+                player.cards.map((card) => (
                   <CardImage
                     card={card}
-                    index={index}
+                    variant="history"
                     key={`${card.suit}-${card.value}`}
                   />
                 ))

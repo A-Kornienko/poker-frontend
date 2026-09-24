@@ -1,8 +1,8 @@
 import { memo } from "react";
-import { ASSETS } from "../helpers/assets";
 import { useTurnTimer } from "../hooks/useTurnTimer";
 import { Player as PlayerType, Card } from "../types/poker";
 import TurnTimerBar from "./TurnTimerBar";
+import { CardImage } from "./Cards/CardImage";
 
 interface PlayerProps {
   player: PlayerType;
@@ -70,28 +70,25 @@ const Player = memo(
               {shouldRevealCards ? (
                 visiblePlayerCards.map((card, i) => {
                   return (
-                    <img
+                    <CardImage
                       key={`${card.suit}-${card.value}-${i}`}
-                      src={`${ASSETS.CARDS(card.suit, card.value)}`}
-                      alt="Player Card"
-                      className="rounded shadow-md my-animate-deal-card"
-                      style={{ animationDelay: `${i * 0.2}s` }}
+                      card={card}
+                      variant="player"
+                      animate
+                      animationDelay={i * 0.2}
+                      alt="Player card"
                     />
                   );
                 })
               ) : shouldShowBacks ? (
                 <>
-                  <img
-                    src={ASSETS.CARD_BACK}
-                    alt="Card Back"
-                    className="w-16 h-24 rounded shadow-md object-cover"
-                    style={{ animation: "none" }}
+                  <CardImage
+                    variant="player"
+                    hidden
                   />
-                  <img
-                    src={ASSETS.CARD_BACK}
-                    alt="Card Back"
-                    className="w-16 h-24 rounded shadow-md object-cover"
-                    style={{ animation: "none" }}
+                  <CardImage
+                    variant="player"
+                    hidden
                   />
                 </>
               ) : null}

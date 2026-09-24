@@ -1,6 +1,7 @@
 export interface Card {
   suit: string;
   value: string;
+  view?: string;
 }
 
 export interface Player {

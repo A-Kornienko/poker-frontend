@@ -1,6 +1,6 @@
 import { memo } from "react";
-import { ASSETS } from "../helpers/assets";
 import { useTableCards } from "../store/selectors/selectTableCardsState";
+import { CardImage } from "./Cards/CardImage";
 
 const TableCards = () => {
   const cards = useTableCards();
@@ -12,12 +12,13 @@ const TableCards = () => {
   return (
     <div className="absolute left-1/2 top-[40%] -translate-x-1/2 flex gap-2 z-10">
       {cards.map((card, idx) => (
-        <img
+        <CardImage
           key={`${card.suit}-${card.value}`}
-          src={ASSETS.CARDS(card.suit, card.value)}
+          card={card}
+          variant="table"
+          animate
+          animationDelay={idx * 0.2}
           alt={`Table Card ${idx + 1}`}
-          className="w-12 h-20 rounded shadow-md my-animate-deal-card md:w-16 md:h-24"
-          style={{ animationDelay: `${idx * 0.2}s` }}
         />
       ))}
     </div>

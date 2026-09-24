@@ -1,7 +1,7 @@
-export interface HistoryCard {
+import { Card } from "./poker";
+
+export interface HistoryCard extends Card {
   name: string;
-  value: number;
-  suit: string;
   view: string;
   type: "hand" | "table";
 }
