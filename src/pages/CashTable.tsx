@@ -88,7 +88,7 @@ const CashTable = () => {
         setServerErrorsMessage(response.data.error)
     });
 
-  const joinToTable = (settingId, stack) => {
+  const joinToTable = (settingId, stack?) => {
     fetchTableConnect(settingId, stack);
   };
 

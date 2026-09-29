@@ -4,7 +4,7 @@ import AxiosApiInstance from './AxiosInstans/AxiosApiInstance';
 
 export default class CashTablesService {
     static async getTableList(limit: number = 10, page: number = 1): Promise<any> {
-        const response = await axios.get(getApiRoute('cash-tables'),
+        const response = await AxiosApiInstance.get(getApiRoute('cash-tables'),
             {
                 params: {
                     limit: limit,
@@ -27,13 +27,11 @@ export default class CashTablesService {
         return response
     }
 
-    static async connectToTable(settingId: string | number, stack: number): Promise<any> {
-
-        const response = await AxiosApiInstance.post(getApiRoute('cash-tables/' + settingId + '/connect'),
-            {
-                stack: stack
-            }
-        )
+    static async connectToTable(settingId: string | number, stack?: number): Promise<any> {
+        const url = getApiRoute('cash-tables/' + settingId + '/connect');
+        const response = stack === undefined
+            ? await AxiosApiInstance.post(url)
+            : await AxiosApiInstance.post(url, { stack });
 
         return response
     }

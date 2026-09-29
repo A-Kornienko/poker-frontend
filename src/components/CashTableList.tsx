@@ -3,13 +3,26 @@ import { useState } from "react";
 import MyButton from "../components/UI/MyButton";
 import Loader from "../components/UI/Loader/Loader";
 import JoinTableModal from "../components/Modals/JoinTableModal";
+import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/AuthContext";
+
+interface CashTableItem {
+  settingId: string | number;
+  isSeated: boolean;
+  buyIn: number;
+  smallBlind: number;
+  bigBlind: number;
+  limitPlayers: number;
+  countTables: number;
+  countPlayers: number;
+}
 
 interface CashTableListProps {
-  tables: any;
+  tables: { items?: CashTableItem[] };
   isTablesLoading: boolean;
-  selectedRowId: any;
-  tableInfo: (id: any) => void;
-  joinToTable: (id: any, stack: number) => void;
+  selectedRowId: string | number | null;
+  tableInfo: (id: string | number) => void;
+  joinToTable: (id: string | number, stack?: number) => void;
   isTableInfo: boolean;
 }
 
@@ -21,20 +34,36 @@ const CashTableList: React.FC<CashTableListProps> = ({
   joinToTable,
   isTableInfo,
 }) => {
+  const navigate = useNavigate();
+  const { isAuthenticated } = useAuth();
 
   const [modalOpen, setModalOpen] = useState(false);
-  const [settingId, setSettingId] = useState(null);
+  const [settingId, setSettingId] = useState<string | number | null>(null);
 
-  const openJoinModal = (settingId) => {
+  const openJoinModal = (settingId: string | number) => {
     setSettingId(settingId);
     setModalOpen(true);
   };
 
-  const handleJoin = (stack) => {
+  const handleJoin = (stack: number) => {
     if (settingId !== null) { 
       joinToTable(settingId, stack); 
       setModalOpen(false);
     }
+  };
+
+  const handleJoinTable = (item: CashTableItem) => {
+    if (!isAuthenticated) {
+      navigate("/login");
+      return;
+    }
+
+    if (item.isSeated) {
+      joinToTable(item.settingId);
+      return;
+    }
+
+    openJoinModal(item.settingId);
   };
 
   return (
@@ -135,7 +164,7 @@ const CashTableList: React.FC<CashTableListProps> = ({
                           <p className="text-sky-500 ">Info</p>
                         </div>
                       </MyButton>
-                      <MyButton onClick={() => openJoinModal(item.settingId)}>
+                      <MyButton onClick={() => handleJoinTable(item)}>
                         <p className="text-green-500">Join</p>
                       </MyButton>
                     </div>
