@@ -113,17 +113,21 @@ const CashTable = () => {
 
   return (
     <>
-      <div className="flex bg-zinc-900 h-vh-fullScreen w-screen relative overflow-hidden ">
+      <div className="relative flex h-vh-fullScreen w-full overflow-hidden bg-zinc-950 p-3 sm:p-4">
         {/* errors messages */}
-        {errorMessages.map((err, idx) => (
-          <div key={idx}>
-            <ErrorMessage message={err} />
+        {errorMessages.length > 0 && (
+          <div className="absolute left-4 right-4 top-4 z-30 space-y-2">
+            {errorMessages.map((err, idx) => (
+              <div key={idx}>
+                <ErrorMessage message={err} />
+              </div>
+            ))}
           </div>
-        ))}
+        )}
 
         {/* Loader */}
         {isTableConnectLoading && (
-          <div className="absolute w-full h-vh-fullScreen bg-black opacity-50 ">
+          <div className="absolute inset-0 z-30 bg-black/50">
             <div className="absolute top-1/4 left-1/2">
               <Loader />
             </div>

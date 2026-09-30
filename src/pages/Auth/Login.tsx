@@ -79,34 +79,41 @@ export default function Login() {
     <>
       {/* Loader */}
       {isLoginLoading && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-60">
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm">
           <Loader />
         </div>
       )}
 
-      <div className="h-vh-fullScreen bg-zinc-900 flex items-center justify-center px-4">
-        <div className="w-full max-w-md flex flex-col items-center">
+      <main className="flex min-h-[calc(100vh-var(--topbar-height))] items-center justify-center bg-[#101a19] px-4 py-10 sm:px-6">
+        <div className="flex w-full max-w-md flex-col items-center">
           {/* Header */}
-          <div className="mb-10 text-center">
-            <h1 className="text-3xl font-bold text-gray-100">PokerRoom</h1>
-            <p className="text-gray-500 mt-2">Login</p>
+          <div className="mb-8 text-center">
+            <p className="mb-2 text-xs font-semibold uppercase tracking-[0.22em] text-emerald-400">
+              PokerRoom
+            </p>
+            <h1 className="text-3xl font-semibold tracking-tight text-white sm:text-4xl">
+              Login
+            </h1>
+            <p className="mt-3 text-sm text-gray-400">
+              Welcome back to the table.
+            </p>
           </div>
 
           {/* Form card */}
-          <div className="w-full bg-zinc-800/80 backdrop-blur-xl rounded-2xl shadow-2xl border border-zinc-700 p-8 flex flex-col">
+          <div className="flex w-full flex-col rounded-2xl border border-white/10 bg-zinc-900/75 p-6 shadow-2xl shadow-black/20 backdrop-blur-xl sm:p-8">
             {/* Error message */}
             {fieldErrors.non_field_errors.length > 0 && (
-              <div className="mb-6 p-4 bg-red-900/60 border border-red-700 text-red-200 rounded-lg text-sm">
+              <div className="mb-6 rounded-xl border border-red-400/20 bg-red-400/10 p-4 text-sm text-red-200">
                 {fieldErrors.non_field_errors.map((err, i) => (
                   <p key={i}>{err}</p>
                 ))}
               </div>
             )}
             {/* form */}
-            <form onSubmit={handleSubmit} className="flex flex-col gap-6">
+            <form onSubmit={handleSubmit} className="flex flex-col gap-5">
               {/* Email */}
               <div className="flex flex-col">
-                <label className="text-sm font-medium text-gray-300 mb-2">
+                <label className="mb-2 text-sm font-medium text-zinc-300">
                   Email
                 </label>
                 <input
@@ -114,7 +121,7 @@ export default function Login() {
                   required
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
-                  className="px-4 py-3 bg-zinc-700/70 border border-zinc-600 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:border-indigo-500 focus:ring-2 focus:ring-indigo-500/30 transition"
+                  className="rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 text-zinc-100 placeholder-zinc-500 transition focus:border-emerald-400/60 focus:outline-none focus:ring-2 focus:ring-emerald-400/20 disabled:cursor-not-allowed disabled:opacity-60"
                   placeholder="your@email.com"
                   disabled={isLoginLoading}
                 />
@@ -122,7 +129,7 @@ export default function Login() {
 
               {/* Password */}
               <div className="flex flex-col">
-                <label className="text-sm font-medium text-gray-300 mb-2">
+                <label className="mb-2 text-sm font-medium text-zinc-300">
                   Password
                 </label>
                 <div className="relative">
@@ -131,7 +138,7 @@ export default function Login() {
                     required
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
-                    className="w-full px-4 py-3 pr-12 bg-zinc-700/70 border border-zinc-600 rounded-lg text-gray-100 placeholder-gray-500 focus:outline-none focus:border-indigo-400 transition"
+                    className="w-full rounded-xl border border-white/10 bg-white/[0.04] px-4 py-3 pr-12 text-zinc-100 placeholder-zinc-500 transition focus:border-emerald-400/60 focus:outline-none focus:ring-2 focus:ring-emerald-400/20 disabled:cursor-not-allowed disabled:opacity-60"
                     placeholder="••••••••"
                     disabled={isLoginLoading}
                   />
@@ -140,7 +147,8 @@ export default function Login() {
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute inset-y-0 right-0 flex items-center pr-4 text-gray-400 hover:text-gray-200 transition"
+                    aria-label={showPassword ? "Hide password" : "Show password"}
+                    className="absolute inset-y-0 right-0 flex items-center pr-4 text-zinc-400 transition hover:text-zinc-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-emerald-400"
                   >
                     {showPassword ? (
                       // Eye open (password visible)
@@ -187,13 +195,13 @@ export default function Login() {
               <div className="flex items-center justify-between">
                 <a
                   href="#"
-                  className="text-sm text-indigo-400 hover:text-indigo-300 transition"
+                  className="text-sm text-emerald-300 transition hover:text-emerald-200"
                 >
                   Forgot your password?
                 </a>
                 <a
                   href="/register"
-                  className="text-sm text-indigo-400 hover:text-indigo-300 transition"
+                  className="text-sm text-emerald-300 transition hover:text-emerald-200"
                 >
                   Register
                 </a>
@@ -203,14 +211,14 @@ export default function Login() {
               <button
                 type="submit"
                 disabled={isLoginLoading}
-                className="py-3.5 px-4 bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-semibold rounded-lg shadow-lg hover:shadow-xl transform hover:scale-[1.02] transition-all duration-200"
+                className="rounded-xl bg-emerald-400 px-4 py-3.5 font-semibold text-zinc-950 shadow-lg shadow-emerald-950/20 transition hover:-translate-y-0.5 hover:bg-emerald-300 hover:shadow-xl focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-200 focus-visible:ring-offset-2 focus-visible:ring-offset-zinc-900 disabled:cursor-not-allowed disabled:opacity-60 disabled:hover:translate-y-0"
               >
                 {isLoginLoading ? "Logging in..." : "Log in"}
               </button>
             </form>
           </div>
         </div>
-      </div>
+      </main>
     </>
   );
 }

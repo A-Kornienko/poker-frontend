@@ -22,181 +22,117 @@ const CashTableSidebar: React.FC<CashTableSidebarProps> = ({
   settingDetails,
   closeSidebar,
 }) => (
-  <div
+  <aside
+    aria-label="Table details"
     className={
-      "absolute top-0 right-0 rounded border-8 border-black border-solid w-1/3 h-full ml-1 transition-all duration-500 ease-in-out bg-zinc-900 " +
+      "absolute inset-y-3 right-3 z-20 flex w-[calc(100%-1.5rem)] flex-col overflow-hidden rounded-2xl border border-white/10 bg-zinc-950 shadow-2xl shadow-black/50 transition-all duration-500 ease-in-out md:w-1/3 " +
       (isTableInfo
-        ? "flex flex-col translate-x-0 opacity-100"
-        : "translate-x-10 opacity-0 pointer-events-none")
+        ? "translate-x-0 opacity-100"
+        : "translate-x-full opacity-0 pointer-events-none")
     }
-    style={{ zIndex: 10 }}
   >
-    <table className="table-auto w-full ">
-      <thead className="bg-gray-800 text-white">
-        <tr>
-          <th className="font-medium p-2 border-r-4 border-gray-300 border-solid">
-            Player
-          </th>
-          <th className="font-medium p-2 border-r-4 border-gray-300 border-solid">
-            №
-          </th>
-          <th className="font-medium p-2 border-r-4 border-gray-300 border-solid last:border-r-0">
-            Chips
-          </th>
-        </tr>
-      </thead>
-      <tbody className="bg-zinc-600 text-gray-300 text-center p-4">
-        {!isPlayersInfoLoading && playersInfo.length === 0 ? (
-          <tr>
-            <td colSpan={5}>
-              <div className="bg-zinc-700 text-red-400 rounded p-4 m-4 shadow font-semibold">
-                No info about players available
-              </div>
-            </td>
-          </tr>
-        ) : (
-          playersInfo.map((player) => (
-            <tr
-              key={player.login}
-              className="border-b-4 border-black border-solid hover:bg-red-900"
-            >
-              <td>{player.login}</td>
-              <td>{player.tableId}</td>
-              <td>${player.stack}</td>
-            </tr>
-          ))
-        )}
-      </tbody>
-    </table>
-    {isPlayersInfoLoading && (
-      <div className="flex justify-center p-5">
-        <Loader />
+    <header className="flex items-center justify-between border-b border-white/10 px-5 py-4">
+      <div>
+        <p className="text-[10px] font-semibold uppercase tracking-[0.25em] text-amber-400">Poker lobby</p>
+        <h2 className="mt-1 text-lg font-semibold text-zinc-100">Table details</h2>
       </div>
-    )}
-    <div
-      onClick={() => getSettingDetails()}
-      className="mt-1 flex justify-center items-center cursor-pointer hover:bg-sky-500"
-    >
-      <p className="px-6 py-2 text-white">more information about the game</p>
-      {isSettingDetails ? (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 640 640"
-          style={{ width: "2rem", height: "2rem", fill: "#fff" }}
-        >
-          <path d="M297.4 169.4C309.9 156.9 330.2 156.9 342.7 169.4L534.7 361.4C547.2 373.9 547.2 394.2 534.7 406.7C522.2 419.2 501.9 419.2 489.4 406.7L320 237.3L150.6 406.6C138.1 419.1 117.8 419.1 105.3 406.6C92.8 394.1 92.8 373.8 105.3 361.3L297.3 169.3z" />
-        </svg>
-      ) : (
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          viewBox="0 0 640 640"
-          style={{ width: "2rem", height: "2rem", fill: "#fff" }}
-        >
-          <path d="M297.4 470.6C309.9 483.1 330.2 483.1 342.7 470.6L534.7 278.6C547.2 266.1 547.2 245.8 534.7 233.3C522.2 220.8 501.9 220.8 489.4 233.3L320 402.7L150.6 233.4C138.1 220.9 117.8 220.9 105.3 233.4C92.8 245.9 92.8 266.2 105.3 278.7L297.3 470.7z" />
-        </svg>
-      )}
-    </div>
-
-    {isSettingDetailsLoading && (
-      <div className="flex justify-center p-5">
-        <Loader />
-      </div>
-    )}
-    <div
-      style={{
-        display: !isSettingDetailsLoading && isSettingDetails ? null : "none",
-      }}
-      className="myScrollbar text-white flex-1 overflow-y-auto"
-    >
-      {/* Checking the availability of data and loader */}
-      {isSettingDetailsLoading ? (
-        <div className="flex justify-center p-5">
-          <Loader />
-        </div>
-      ) : Object.keys(settingDetails).length > 0 ? (
-        <>
-          <div className="flex justify-between  p-2 m-2 bg-zinc-600 rounded">
-            <p>Name</p>
-            <p className="text-gray-300">{settingDetails.name}</p>
-          </div>
-          <div className="flex justify-between  p-2 m-2 bg-zinc-600 rounded">
-            <p>Type</p>
-            <p className="text-gray-300">{settingDetails.type}</p>
-          </div>
-          <div className="flex justify-between  p-2 m-2 bg-zinc-600 rounded">
-            <p>Rules</p>
-            <p className="text-gray-300">{settingDetails.rule}</p>
-          </div>
-          <div className="flex justify-between  p-2 m-2 bg-zinc-600 rounded">
-            <p>Buy-in</p>
-            <p className="text-gray-300">{settingDetails.buyIn} $</p>
-          </div>
-          <div className="flex justify-between  p-2 m-2 bg-zinc-600 rounded">
-            <p>Blinds</p>
-            <p className="text-gray-300">
-              {settingDetails.smallBlind}$ / {settingDetails.bigBlind}$
-            </p>
-          </div>
-          <div className="flex justify-between  p-2 m-2 bg-zinc-600 rounded">
-            <p>Time to move</p>
-            <p className="text-gray-300">{settingDetails.turnTime} sec</p>
-          </div>
-          <div className="flex justify-between  p-2 m-2 bg-zinc-600 rounded">
-            <p>Time Bank</p>
-            <p className="text-gray-300">
-              {settingDetails?.timeBank?.timeLimit} sec
-            </p>
-          </div>
-          <div className="flex justify-between  p-2 m-2 bg-zinc-600 rounded">
-            <p>Minimum number of players at the table</p>
-            <p className="text-gray-300">2</p>
-          </div>
-          <div className="flex justify-between  p-2 m-2 bg-zinc-600 rounded">
-            <p>Currency</p>
-            <p className="text-gray-300">{settingDetails.currency}</p>
-          </div>
-          <div className="flex justify-between  p-2 m-2 bg-zinc-600 rounded">
-            <p>Rake</p>
-            <p className="text-gray-300">{settingDetails.rake}%</p>
-          </div>
-          <div className="flex justify-between  p-2 m-2 bg-zinc-600 rounded">
-            <p>Rake cap</p>
-            <p className="text-gray-300">{settingDetails.rakeCap}$</p>
-          </div>
-          <div className="flex flex-col  p-2 m-2 bg-zinc-600 rounded">
-            <p>Hold'em Rules</p>
-            <p className="text-gray-300">
-              Texas Hold'em is the most popular version of poker in the world. A
-              standard deck of 52 cards is used for the game. Each player
-              receives two dark cards ("pocket cards"). Then, during four rounds
-              of trading, five community cards are laid out on the table. With
-              the help of common and closed cards, the player must collect the
-              best combination of five cards.
-            </p>
-          </div>
-        </>
-      ) : (
-        <div className="bg-zinc-700 text-gray-300 rounded p-4 m-4 shadow font-semibold text-center">
-          Table data unavailable
-        </div>
-      )}
-    </div>
-
-    <div className="absolute h-24 w-10 inset-1/3 left-0 opacity-20 hover:opacity-100">
       <button
-        onClick={() => closeSidebar()}
-        className="w-full h-full bg-gray-300 rounded-r-lg"
+        type="button"
+        onClick={closeSidebar}
+        aria-label="Close table details"
+        className="rounded-full px-3 pb-1 text-2xl leading-none text-zinc-400 transition hover:bg-white/10 hover:text-white focus:outline-none focus:ring-2 focus:ring-amber-400/60"
       >
-        <svg
-          viewBox="0 0 24 24"
-          role="presentation"
-          style={{ width: "2.5rem", height: "3rem" }}
-        >
-          <path d="M8.59,16.58L13.17,12L8.59,7.41L10,6L16,12L10,18L8.59,16.58Z"></path>
-        </svg>
+        &times;
       </button>
-    </div>
-  </div>
+    </header>
+
+    <section className="border-b border-white/10 p-4">
+      <div className="mb-3 flex items-center justify-between">
+        <h3 className="text-sm font-semibold text-zinc-200">Players</h3>
+        <span className="text-xs text-zinc-500">{playersInfo.length} seated</span>
+      </div>
+      {isPlayersInfoLoading ? (
+        <div className="flex justify-center py-5"><Loader /></div>
+      ) : playersInfo.length === 0 ? (
+        <p className="rounded-lg border border-white/10 bg-white/[0.03] px-3 py-4 text-center text-sm text-zinc-500">
+          No players at this table yet.
+        </p>
+      ) : (
+        <ul className="myScrollbar max-h-52 space-y-2 overflow-y-auto">
+          {playersInfo.map((player) => (
+            <li
+              key={player.login}
+              className="flex items-center justify-between gap-3 rounded-lg border border-white/[0.06] bg-white/[0.03] px-3 py-2.5"
+            >
+              <div className="min-w-0">
+                <p className="truncate text-sm font-medium text-zinc-200">{player.login}</p>
+                <p className="text-xs text-zinc-500">Seat {player.tableId}</p>
+              </div>
+              <span className="shrink-0 text-sm font-medium text-emerald-300">${player.stack}</span>
+            </li>
+          ))}
+        </ul>
+      )}
+    </section>
+
+    <button
+      type="button"
+      onClick={getSettingDetails}
+      aria-expanded={isSettingDetails}
+      className="flex w-full items-center justify-between border-b border-white/10 px-5 py-4 text-left transition hover:bg-white/[0.04] focus:outline-none focus:ring-2 focus:ring-inset focus:ring-amber-400/60"
+    >
+      <span className="text-sm font-semibold text-zinc-200">Game information</span>
+      <svg
+        viewBox="0 0 24 24"
+        aria-hidden="true"
+        className={`h-5 w-5 text-zinc-400 transition-transform ${isSettingDetails ? "rotate-180" : ""}`}
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+      >
+        <path d="m6 9 6 6 6-6" />
+      </svg>
+    </button>
+
+    {isSettingDetails && (
+      <div className="myScrollbar flex-1 space-y-2 overflow-y-auto p-4">
+        {isSettingDetailsLoading ? (
+          <div className="flex justify-center py-5"><Loader /></div>
+        ) : Object.keys(settingDetails || {}).length > 0 ? (
+          <>
+            {[
+              ["Name", settingDetails.name],
+              ["Type", settingDetails.type],
+              ["Rules", settingDetails.rule],
+              ["Buy-in", `${settingDetails.buyIn} $`],
+              ["Blinds", `${settingDetails.smallBlind}$ / ${settingDetails.bigBlind}$`],
+              ["Time to move", `${settingDetails.turnTime} sec`],
+              ["Time bank", `${settingDetails?.timeBank?.timeLimit} sec`],
+              ["Minimum players", "2"],
+              ["Currency", settingDetails.currency],
+              ["Rake", `${settingDetails.rake}%`],
+              ["Rake cap", `${settingDetails.rakeCap}$`],
+            ].map(([label, value]) => (
+              <div key={label} className="flex items-center justify-between gap-4 rounded-lg border border-white/[0.06] bg-white/[0.03] px-3 py-2.5">
+                <span className="text-sm text-zinc-500">{label}</span>
+                <span className="text-right text-sm font-medium text-zinc-200">{value}</span>
+              </div>
+            ))}
+            <div className="rounded-lg border border-white/[0.06] bg-white/[0.03] p-3">
+              <p className="mb-1 text-sm font-medium text-zinc-300">Hold'em rules</p>
+              <p className="text-sm leading-6 text-zinc-500">
+                Texas Hold'em uses a standard 52-card deck. Players receive two private cards, then share five community cards across four betting rounds to make the best five-card hand.
+              </p>
+            </div>
+          </>
+        ) : (
+          <p className="rounded-lg border border-white/10 bg-white/[0.03] p-4 text-center text-sm text-zinc-500">
+            Table information is unavailable.
+          </p>
+        )}
+      </div>
+    )}
+  </aside>
 );
 
 export default CashTableSidebar;
