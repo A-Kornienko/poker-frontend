@@ -2,22 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-.playerMaxCount {
-    position: relative;
-    border-radius: 50%;
-    width: 10px;
-    justify-content: center;
-    align-items: center;
-    display: flex;
-    padding: 12px;
-    height: 10px;
-    background-color: #8A2BE2;
-    top: -8px;
-    left: 10px;
-    z-index: 1;
-    font-size: 14px;
-}
-
 /* 50px = height for TopBar */
 :root {
   --topbar-height: 50px;
@@ -60,6 +44,53 @@
 
 .my-animate-deal-card {
   animation: deal-card 0.5s ease-out both;
+}
+
+.stack-modal > div:first-child {
+  border-bottom: 1px solid rgb(255 255 255 / 0.1);
+  padding: 1.25rem 1.5rem;
+}
+
+.stack-modal > div:first-child h2 {
+  color: #f4f4f5;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.stack-modal > div:last-child {
+  padding: 1.5rem;
+}
+
+.stack-range-slider {
+  appearance: none;
+  height: 0.5rem;
+  border-radius: 9999px;
+  cursor: pointer;
+  outline: none;
+}
+
+.stack-range-slider::-webkit-slider-thumb {
+  appearance: none;
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 2px solid #fef3c7;
+  border-radius: 9999px;
+  background: #fbbf24;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.35);
+}
+
+.stack-range-slider::-moz-range-thumb {
+  width: 1.1rem;
+  height: 1.1rem;
+  border: 2px solid #fef3c7;
+  border-radius: 9999px;
+  background: #fbbf24;
+  box-shadow: 0 2px 8px rgb(0 0 0 / 0.35);
+}
+
+.stack-range-slider:focus-visible {
+  outline: 2px solid #fbbf24;
+  outline-offset: 4px;
 }
 
 @media (max-width: 768px) {
