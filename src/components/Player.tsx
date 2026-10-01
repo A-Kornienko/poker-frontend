@@ -4,6 +4,19 @@ import { Player as PlayerType, Card } from "../types/poker";
 import TurnTimerBar from "./TurnTimerBar";
 import { CardImage } from "./Cards/CardImage";
 
+const LAST_ACTION_BASE_CLASS =
+  "absolute bottom-1 left-1/2 -translate-x-1/2 rounded-md border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wide text-zinc-950 shadow-lg";
+
+const LAST_ACTION_STYLES: Record<string, string> = {
+  fold: "border-red-300/30 bg-red-400",
+  check: "border-emerald-300/30 bg-emerald-400",
+  call: "border-emerald-300/30 bg-emerald-400",
+  default: "border-amber-300/30 bg-amber-400",
+};
+
+const getLastActionClass = (betType?: string): string =>
+  LAST_ACTION_STYLES[betType?.toLowerCase() ?? ""] ?? LAST_ACTION_STYLES.default;
+
 interface PlayerProps {
   player: PlayerType;
   myPlace: number;
@@ -58,15 +71,15 @@ const Player = memo(
       <div
         className={`player-${
           player.place
-        } flex flex-col items-center justify-center z-10 ${
+        } z-10 flex flex-col items-center justify-center ${
           isWinner ? "my-animate-pulse" : ""
         }`}
       >
         {/* Avatar, Timer and Action */}
-        <div className="w-36 h-32 text-center">
-          <div className="relative flex justify-center">
+        <div className="w-36 text-center">
+          <div className="relative flex h-24 justify-center">
             {/* Player cards */}
-            <div className="flex w-16 h-24 justify-center">
+            <div className="flex h-24 w-16 justify-center">
               {shouldRevealCards ? (
                 visiblePlayerCards.map((card, i) => {
                   return (
@@ -95,30 +108,36 @@ const Player = memo(
             </div>
 
             {/* Avatar */}
-            <div className="absolute -bottom-3 flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-gray-100 to-gray-300 ring-2 ring-gray-200">
+            <div
+              className={`absolute -bottom-3 flex h-16 w-16 items-center justify-center rounded-full border bg-zinc-900/95 shadow-xl shadow-black/30 transition-all ${
+                isWinner
+                  ? "border-amber-300/80 ring-2 ring-amber-400/50"
+                  : isTurn
+                    ? "border-emerald-300/80 ring-2 ring-emerald-400/50 shadow-emerald-950/40"
+                    : "border-white/15 ring-2 ring-zinc-950/80"
+              }`}
+            >
               <svg
                 viewBox="0 0 24 24"
-                className="text-gray-400"
+                className={`h-12 w-12 ${
+                  isWinner
+                    ? "text-amber-300"
+                    : isTurn
+                      ? "text-emerald-300"
+                      : "text-zinc-500"
+                }`}
                 style={{ width: "3rem", height: "3rem" }}
               >
                 <path
                   d="M12,4A4,4 0 0,1 16,8A4,4 0 0,1 12,12A4,4 0 0,1 8,8A4,4 0 0,1 12,4M12,14C16.42,14 20,15.79 20,18V20H4V18C4,15.79 7.58,14 12,14Z"
-                  style={{ fill: "#fff" }}
+                  fill="currentColor"
                 />
               </svg>
             </div>
 
             {/* Last Action */}
             {player.betType && (
-              <div
-                className={`absolute bottom-1 left-1/2 -translate-x-1/2 text-white font-bold text-sm p-0.5 rounded ${
-                  player.betType === "fold"
-                    ? "bg-red-500"
-                    : player.betType === "check" || player.betType === "call"
-                      ? "bg-green-500"
-                      : "bg-yellow-500"
-                }`}
-              >
+              <div className={`${LAST_ACTION_BASE_CLASS} ${getLastActionClass(player.betType)}`}>
                 {player.betType}
               </div>
             )}
@@ -126,18 +145,22 @@ const Player = memo(
 
           {/* Name && stack */}
           <div
-            className={`relative rounded-b-2xl rounded-t-md font-bold z-10 ${
-              isTurn ? "ring-2 ring-green-500 border border-white/10" : ""
+            className={`relative z-10 overflow-hidden rounded-xl border bg-zinc-950/90 font-bold shadow-xl shadow-black/30 backdrop-blur-sm ${
+              isWinner
+                ? "border-amber-300/70 border-t-2 border-t-amber-300 bg-gradient-to-b from-amber-400/25 via-zinc-800/95 to-zinc-900/95 shadow-amber-950/40"
+                : isTurn
+                  ? "border-emerald-300/70 border-t-2 border-t-emerald-300 bg-gradient-to-b from-emerald-400/25 via-zinc-800/95 to-zinc-900/95 shadow-emerald-950/40 ring-1 ring-emerald-400/30"
+                  : "border-white/20 border-t-2 border-t-emerald-400/70 bg-gradient-to-b from-white/[0.12] via-zinc-800/95 to-zinc-900/95 shadow-black/40"
             }`}
           >
-            <div className="truncate rounded-t-md border-b border-white/10 bg-gray-800 px-1 text-white/60">
+            <div className="truncate border-b border-white/15 bg-white/[0.06] px-2 py-1.5 text-xs font-semibold text-white">
               {player.profile.name}
             </div>
             {isTurn && (
               <TurnTimerBar betExpTime={betExpTime} timerKey={timerKey} />
             )}
-            <div className="rounded-b-2xl bg-gray-600 px-3 py-1">
-              <div className="text-blue-300 flex items-center justify-center text-sm">
+            <div className="bg-white/[0.06] px-3 py-1.5">
+              <div className="flex items-center justify-center text-sm font-bold text-amber-300 drop-shadow-[0_1px_4px_rgba(251,191,36,0.25)]">
                 {player.stack} {currency}
               </div>
             </div>

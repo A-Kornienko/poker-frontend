@@ -9,30 +9,36 @@ interface BlindChipProps {
 const BlindChip = memo(({ type }: BlindChipProps) => {
   const chipStyles: Record<
     ChipType,
-    { bgColor: string; textColor: string; label: string }
+    { bgColor: string; textColor: string; ringColor: string; shadowColor: string; label: string }
   > = {
     dealer: {
-      bgColor: "bg-yellow-400",
-      textColor: "text-black",
+      bgColor: "bg-amber-400",
+      textColor: "text-amber-950",
+      ringColor: "ring-amber-200/70",
+      shadowColor: "shadow-amber-950/50",
       label: "D",
     },
     smallBlind: {
-      bgColor: "bg-blue-600",
-      textColor: "text-white",
+      bgColor: "bg-sky-400",
+      textColor: "text-sky-950",
+      ringColor: "ring-sky-200/70",
+      shadowColor: "shadow-sky-950/50",
       label: "SB",
     },
     bigBlind: {
-      bgColor: "bg-red-600",
-      textColor: "text-white",
+      bgColor: "bg-rose-400",
+      textColor: "text-rose-950",
+      ringColor: "ring-rose-200/70",
+      shadowColor: "shadow-rose-950/50",
       label: "BB",
     },
   };
 
-  const { bgColor, textColor, label } = chipStyles[type];
+  const { bgColor, textColor, ringColor, shadowColor, label } = chipStyles[type];
 
   return (
     <span
-      className={`${bgColor} ${textColor} rounded-full w-6 h-6 flex items-center justify-center text-sm font-bold shadow z-10`}
+      className={`${bgColor} ${textColor} ${ringColor} ${shadowColor} z-10 flex h-7 w-7 items-center justify-center rounded-full text-[11px] font-black tracking-tight shadow-lg ring-2 ring-offset-1 ring-offset-zinc-950 transition-transform hover:scale-110`}
     >
       {label}
     </span>
