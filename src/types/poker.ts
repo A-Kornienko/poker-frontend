@@ -1,6 +1,6 @@
 export interface Card {
   suit: string;
-  value: string;
+  value: string | number;
   view?: string;
 }
 

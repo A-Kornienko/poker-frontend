@@ -6,13 +6,21 @@ export interface HistoryCard extends Card {
   type: "hand" | "table";
 }
 
+export interface HandHistoryMyResult {
+  deltaChips: number;
+  finalStack: number;
+}
+
 export interface HandHistoryItem {
   session: string;
+  handNumber?: number;
+  status?: string;
   startedAt: string | number;
-  endedAt: string | number;
+  endedAt?: string | number;
   cards?: HistoryCard[];
   winners: string[];
-  bank: number;
+  bank?: number;
+  myResult?: HandHistoryMyResult;
 }
 
 export interface HandHistoryPagination {
@@ -25,9 +33,9 @@ export interface HandHistoryPagination {
 export interface HandHistoryListResponse {
   success: boolean;
   data: {
-    items: Record<string, Omit<HandHistoryItem, "session">>;
+    items: HandHistoryItem[] | Record<string, Omit<HandHistoryItem, "session">>;
     pagination: HandHistoryPagination;
-    isAuthorized: boolean;
+    isAuthorized?: boolean;
   };
 }
 
@@ -41,8 +49,8 @@ export interface HistoryPlayer {
 }
 
 export interface HistoryBlindState {
-  smallBlindPlace: number;
-  bigBlindPlace: number;
+  smallBlindPlace?: number;
+  bigBlindPlace?: number;
   smallBlind: number;
   bigBlind: number;
 }
@@ -69,24 +77,38 @@ export interface WinningCombination {
 
 export interface HistoryWinner {
   login: string;
+  seat?: number;
   combination?: WinningCombination;
+  handRank?: string;
   handCards: HistoryCard[];
   sum: number;
 }
 
+export interface HandHistoryResult {
+  player: string;
+  seat: number;
+  deltaChips: number;
+  finalStack: number;
+}
+
 export interface HandHistoryDetails {
   session: string;
-  cards: HistoryCard[];
-  players: Record<string, HistoryPlayer>;
-  blinds: HistoryBlindState;
-  dealer: number;
+  handNumber?: number;
+  gameType?: string;
+  status?: string;
+  cards?: HistoryCard[];
+  boardCards?: HistoryCard[];
+  players: HistoryPlayer[] | Record<string, HistoryPlayer>;
+  blinds?: HistoryBlindState;
+  dealer?: number;
   preflop: HistoryAction[];
   flop: HistoryAction[];
   turn: HistoryAction[];
   river: HistoryAction[];
   pot: HistoryPot;
   winners: HistoryWinner[];
-  isAuthorized: boolean;
+  results?: HandHistoryResult[];
+  isAuthorized?: boolean;
 }
 
 export interface HandHistoryDetailsResponse {

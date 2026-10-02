@@ -7,6 +7,10 @@ import {
   HandHistoryListResponse,
   HandHistoryPagination,
 } from "../types/handHistory";
+import {
+  mapHandHistoryDetails,
+  mapHandHistoryList,
+} from "../utils/handHistoryData";
 
 export interface HandHistoryPage {
   items: HandHistoryItem[];
@@ -40,15 +44,7 @@ export default class HandHistoryService {
       { params },
     );
 
-    const { items, pagination } = response.data.data;
-
-    return {
-      items: Object.entries(items).map(([session, item]) => ({
-        session,
-        ...item,
-      })),
-      pagination,
-    };
+    return mapHandHistoryList(response.data);
   }
 
   static async getDetails(session: string): Promise<HandHistoryDetails> {
@@ -56,6 +52,6 @@ export default class HandHistoryService {
       getApiRoute(`table-history/details/${session}`),
     );
 
-    return response.data.data;
+    return mapHandHistoryDetails(response.data);
   }
 }

@@ -7,136 +7,167 @@ interface HandDetailsProps {
   details: HandHistoryDetails;
 }
 
-export const HandDetails = ({ details }: HandDetailsProps) => (
-  <div className="space-y-6 border-t border-amber-500/20 bg-zinc-950/60 p-5">
-    <section>
-      <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-amber-400">
-        Table cards
-      </h3>
-      <div className="flex flex-wrap gap-2">
-        {details.cards.map((card) => (
-          <CardImage
-            card={card}
-            variant="history"
-            key={`${card.suit}-${card.value}`}
-          />
-        ))}
-      </div>
-    </section>
+export const HandDetails = ({ details }: HandDetailsProps) => {
+  const players = Array.isArray(details.players)
+    ? details.players
+    : Object.values(details.players ?? {});
+  const boardCards = details.boardCards ?? details.cards ?? [];
+  const tableBlinds = details.blinds ?? { smallBlind: 0, bigBlind: 0 };
 
-    <section>
-      <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-amber-400">
-        Players
-      </h3>
-      <div className="grid gap-3 md:grid-cols-2">
-        {Object.values(details.players).map((player) => (
-          <div
-            key={player.place}
-            className="rounded-lg border border-zinc-800 bg-zinc-900/80 p-4"
-          >
-            <div className="mb-3 flex items-start justify-between gap-3">
-              <div>
-                <p className="font-semibold text-zinc-100">
-                  {player.login}
-                  {player.isMyPlayer && (
-                    <span className="ml-2 text-xs font-normal text-amber-400">
-                      You
-                    </span>
-                  )}
-                </p>
-                <p className="text-xs text-zinc-500">
-                  Place {player.place} - {player.position || "No position"}
+  return (
+    <div className="space-y-6 border-t border-amber-500/20 bg-zinc-950/60 p-5">
+      <section>
+        <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-amber-400">
+          Table cards
+        </h3>
+        <div className="flex flex-wrap gap-2">
+          {boardCards.map((card) => (
+            <CardImage
+              card={card}
+              variant="history"
+              key={`${card.suit}-${card.value}-${card.type ?? "card"}`}
+            />
+          ))}
+        </div>
+      </section>
+
+      <section>
+        <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-amber-400">
+          Players
+        </h3>
+        <div className="grid gap-3 md:grid-cols-2">
+          {players.map((player) => (
+            <div
+              key={`${player.login}-${player.place}`}
+              className="rounded-lg border border-zinc-800 bg-zinc-900/80 p-4"
+            >
+              <div className="mb-3 flex items-start justify-between gap-3">
+                <div>
+                  <p className="font-semibold text-zinc-100">
+                    {player.login}
+                    {player.isMyPlayer && (
+                      <span className="ml-2 text-xs font-normal text-amber-400">
+                        You
+                      </span>
+                    )}
+                  </p>
+                  <p className="text-xs text-zinc-500">
+                    Place {player.place} - {player.position || "No position"}
+                  </p>
+                </div>
+                <p className="text-sm text-amber-300">
+                  Stack {formatAmount(player.stack)}
                 </p>
               </div>
-              <p className="text-sm text-amber-300">
-                Stack {formatAmount(player.stack)}
-              </p>
+              <div className="flex min-h-20 gap-2">
+                {player.cards.length > 0 ? (
+                  player.cards.map((card) => (
+                    <CardImage
+                      card={card}
+                      variant="history"
+                      key={`${card.suit}-${card.value}-${card.type ?? "card"}`}
+                    />
+                  ))
+                ) : (
+                  <p className="self-center text-sm text-zinc-500">
+                    Cards not revealed
+                  </p>
+                )}
+              </div>
             </div>
-            <div className="flex min-h-20 gap-2">
-              {player.cards.length > 0 ? (
-                player.cards.map((card) => (
-                  <CardImage
-                    card={card}
-                    variant="history"
-                    key={`${card.suit}-${card.value}`}
-                  />
-                ))
-              ) : (
-                <p className="self-center text-sm text-zinc-500">
-                  Cards not revealed
-                </p>
-              )}
-            </div>
-          </div>
-        ))}
-      </div>
-    </section>
-
-    <section className="grid gap-4 md:grid-cols-2">
-      <div>
-        <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-amber-400">
-          Table info
-        </h3>
-        <div className="space-y-2 text-sm text-zinc-300">
-          <p>Dealer: place {details.dealer}</p>
-          <p>
-            Blinds: {formatAmount(details.blinds.smallBlind)} / {formatAmount(details.blinds.bigBlind)}
-          </p>
+          ))}
         </div>
-      </div>
-      <div>
-        <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-amber-400">
-          Pots by street
-        </h3>
-        <div className="grid grid-cols-2 gap-2 text-sm text-zinc-300">
-          <p>Preflop: {formatAmount(details.pot.preFlop)}</p>
-          <p>Flop: {formatAmount(details.pot.flop)}</p>
-          <p>Turn: {formatAmount(details.pot.turn)}</p>
-          <p>River: {formatAmount(details.pot.river)}</p>
-        </div>
-      </div>
-    </section>
+      </section>
 
-    <section>
-      <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-amber-400">
-        Actions
-      </h3>
-      <div className="grid gap-4 md:grid-cols-2">
-        {(
-          [
-            ["Preflop", details.preflop],
-            ["Flop", details.flop],
-            ["Turn", details.turn],
-            ["River", details.river],
-          ] as const
-        ).map(([street, actions]) => (
-          <div key={street}>
-            <h4 className="mb-2 text-sm font-semibold text-zinc-200">{street}</h4>
-            <ActionList actions={actions} />
-          </div>
-        ))}
-      </div>
-    </section>
-
-    <section className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4">
-      <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-amber-400">
-        Winner
-      </h3>
-      <div className="space-y-4">
-        {details.winners.map((winner) => (
-          <div key={winner.login} className="flex flex-wrap justify-between gap-4">
-            <div>
-              <p className="font-semibold text-zinc-100">{winner.login}</p>
-              <p className="text-sm text-amber-300">
-                {winner.combination?.name ?? "Combination unavailable"}
-              </p>
-            </div>
-            <p className="font-semibold text-amber-300">
-              +{formatAmount(winner.sum)}
+      <section className="grid gap-4 md:grid-cols-2">
+        <div>
+          <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-amber-400">
+            Table info
+          </h3>
+          <div className="space-y-2 text-sm text-zinc-300">
+            <p>Dealer: place {details.dealer ?? "-"}</p>
+            <p>
+              Blinds: {formatAmount(tableBlinds.smallBlind)} / {formatAmount(tableBlinds.bigBlind)}
             </p>
           </div>
-        ))}
-      </div>
-    </section>
-  </div>
-);
+        </div>
+        <div>
+          <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-amber-400">
+            Pots by street
+          </h3>
+          <div className="grid grid-cols-2 gap-2 text-sm text-zinc-300">
+            <p>Preflop: {formatAmount(details.pot.preFlop)}</p>
+            <p>Flop: {formatAmount(details.pot.flop)}</p>
+            <p>Turn: {formatAmount(details.pot.turn)}</p>
+            <p>River: {formatAmount(details.pot.river)}</p>
+          </div>
+        </div>
+      </section>
+
+      <section>
+        <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-amber-400">
+          Actions
+        </h3>
+        <div className="grid gap-4 md:grid-cols-2">
+          {(
+            [
+              ["Preflop", details.preflop ?? []],
+              ["Flop", details.flop ?? []],
+              ["Turn", details.turn ?? []],
+              ["River", details.river ?? []],
+            ] as const
+          ).map(([street, actions]) => (
+            <div key={street}>
+              <h4 className="mb-2 text-sm font-semibold text-zinc-200">{street}</h4>
+              <ActionList actions={actions} />
+            </div>
+          ))}
+        </div>
+      </section>
+
+      {details.results && details.results.length > 0 && (
+        <section>
+          <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-amber-400">
+            Results
+          </h3>
+          <div className="space-y-3">
+            {details.results.map((result) => (
+              <div
+                key={`${result.player}-${result.seat}`}
+                className="flex items-center justify-between rounded-lg border border-zinc-800 bg-zinc-900/80 px-3 py-2 text-sm"
+              >
+                <span className="text-zinc-200">{result.player}</span>
+                <span className={result.deltaChips >= 0 ? "text-amber-300" : "text-rose-300"}>
+                  {result.deltaChips >= 0 ? "+" : ""}
+                  {formatAmount(result.deltaChips)}
+                </span>
+                <span className="text-zinc-400">Stack {formatAmount(result.finalStack)}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <section className="rounded-lg border border-amber-500/30 bg-amber-500/5 p-4">
+        <h3 className="mb-3 text-xs font-semibold uppercase tracking-[0.2em] text-amber-400">
+          Winner
+        </h3>
+        <div className="space-y-4">
+          {details.winners.map((winner) => (
+            <div key={`${winner.login}-${winner.seat ?? "unknown"}`} className="flex flex-wrap justify-between gap-4">
+              <div>
+                <p className="font-semibold text-zinc-100">{winner.login}</p>
+                <p className="text-sm text-amber-300">
+                  {winner.combination?.name ?? winner.handRank ?? "Combination unavailable"}
+                </p>
+              </div>
+              <p className="font-semibold text-amber-300">
+                +{formatAmount(winner.sum)}
+              </p>
+            </div>
+          ))}
+        </div>
+      </section>
+    </div>
+  );
+};
