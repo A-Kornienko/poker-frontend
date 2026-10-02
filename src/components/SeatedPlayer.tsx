@@ -69,7 +69,6 @@ const SeatedPlayer = ({
           isWinner={isWinner}
           isTurn={isTurn}
           state={tableState}
-          betExpTime={isTurn ? player.betExpTime : 0}
         />
       </div>
     </Fragment>

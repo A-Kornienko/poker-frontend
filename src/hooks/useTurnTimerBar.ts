@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { TIMERS } from "../constants/pokerGameConstants";
 
 interface PersistedTimerState {
@@ -8,18 +8,17 @@ interface PersistedTimerState {
 
 interface UseTurnTimerBarProps {
   betExpTime?: number;
-  timerKey?: string | number;
+  timerKey: string | number;
+  isActive: boolean;
 }
 
 const TIMER_STORAGE_KEY = "poker-turn-timer";
 
-const getTimerStorageKey = (timerKey?: string | number) =>
-  typeof timerKey === "undefined" || timerKey === ""
-    ? TIMER_STORAGE_KEY
-    : `${TIMER_STORAGE_KEY}:${timerKey}`;
+const getTimerStorageKey = (timerKey: string | number) =>
+  timerKey === "" ? TIMER_STORAGE_KEY : `${TIMER_STORAGE_KEY}:${timerKey}`;
 
 const readPersistedTimerState = (
-  timerKey?: string | number
+  timerKey: string | number
 ): PersistedTimerState | null => {
   if (typeof window === "undefined") {
     return null;
@@ -46,7 +45,7 @@ const readPersistedTimerState = (
 };
 
 const persistTimerState = (
-  timerKey: string | number | undefined,
+  timerKey: string | number,
   totalTime: number,
   expiresAt: number
 ) => {
@@ -60,7 +59,7 @@ const persistTimerState = (
   );
 };
 
-const clearPersistedTimerState = (timerKey?: string | number) => {
+const clearPersistedTimerState = (timerKey: string | number) => {
   if (typeof window === "undefined") {
     return;
   }
@@ -71,12 +70,22 @@ const clearPersistedTimerState = (timerKey?: string | number) => {
 export const useTurnTimerBar = ({
   betExpTime = 0,
   timerKey,
+  isActive,
 }: UseTurnTimerBarProps) => {
   const [timeLeft, setTimeLeft] = useState(0);
   const [totalTime, setTotalTime] = useState(0);
+  const betExpTimeRef = useRef(betExpTime);
+  betExpTimeRef.current = betExpTime;
 
   useEffect(() => {
-    const initial = Math.max(0, betExpTime ?? 0);
+    if (!isActive) {
+      setTimeLeft(0);
+      setTotalTime(0);
+      clearPersistedTimerState(timerKey);
+      return;
+    }
+
+    const initial = Math.max(0, betExpTimeRef.current ?? 0);
 
     if (initial <= 0) {
       setTimeLeft(0);
@@ -116,7 +125,7 @@ export const useTurnTimerBar = ({
     }, TIMERS.TIMER_INTERVAL);
 
     return () => clearInterval(timer);
-  }, [betExpTime, timerKey]);
+  }, [isActive, timerKey]);
 
   return { timeLeft, totalTime };
 };

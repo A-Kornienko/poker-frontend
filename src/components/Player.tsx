@@ -1,5 +1,4 @@
 import { memo } from "react";
-import { useTurnTimer } from "../hooks/useTurnTimer";
 import { Player as PlayerType, Card } from "../types/poker";
 import TurnTimerBar from "./TurnTimerBar";
 import { CardImage } from "./Cards/CardImage";
@@ -25,7 +24,6 @@ interface PlayerProps {
   isWinner: boolean;
   isTurn: boolean;
   state: string;
-  betExpTime?: number;
 }
 
 /**
@@ -40,14 +38,7 @@ const Player = memo(
     isWinner,
     isTurn,
     state,
-    betExpTime,
   }: PlayerProps) => {
-    const timerKey = useTurnTimer({
-      isTurn,
-      betExpTime,
-      playerPlace: player.place,
-    });
-
     const normalizedState = (state ?? "").toLowerCase();
     const heroHoleCards = Array.isArray(cards.player) ? cards.player : [];
     const playerHoleCards = Array.isArray(player.cards) ? player.cards : [];
@@ -156,9 +147,7 @@ const Player = memo(
             <div className="truncate border-b border-zinc-700/80 bg-black/20 px-2 py-1.5 text-xs font-semibold text-amber-100">
               {player.profile.name}
             </div>
-            {isTurn && (
-              <TurnTimerBar betExpTime={betExpTime} timerKey={timerKey} />
-            )}
+            <TurnTimerBar playerPlace={player.place} isTurn={isTurn} />
             <div className="bg-black/20 px-3 py-1.5">
               <div className="flex items-center justify-center text-sm font-bold text-amber-300 drop-shadow-[0_1px_4px_rgba(251,191,36,0.25)]">
                 {player.stack} {currency}

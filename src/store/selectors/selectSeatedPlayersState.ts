@@ -21,13 +21,19 @@ const selectSeatedPlayersState = ({
   const players = winnerPresentation.active
     ? (winnerPresentation.data?.players ?? {})
     : tableState.players;
+  const playersWithoutTimer = Object.fromEntries(
+    Object.entries(players).map(([place, { betExpTime: _betExpTime, ...player }]) => [
+      place,
+      player,
+    ]),
+  );
 
   const winners = winnerPresentation.active
     ? winnerPresentation.data?.banks.items || {}
     : tableState.banks.items || {};
 
   return {
-    players,
+    players: playersWithoutTimer,
     myPlace: tableState.myPlace,
     turnPlace: tableState.turnPlace,
     currency: tableState.currency,

@@ -3,17 +3,25 @@ import {
   BAR_COLOR_THRESHOLDS,
   COLORS,
 } from "../constants/pokerGameConstants";
+import { useTurnTimer } from "../hooks/useTurnTimer";
 import { useTurnTimerBar } from "../hooks/useTurnTimerBar";
+import { usePlayerBetExpTime } from "../store/selectors/usePlayerBetExpTime";
 
 interface TurnTimerBarProps {
-  betExpTime?: number;
-  timerKey?: string | number;
+  playerPlace: string | number;
+  isTurn: boolean;
 }
 
-const TurnTimerBar = ({ betExpTime = 0, timerKey }: TurnTimerBarProps) => {
-  const { timeLeft, totalTime } = useTurnTimerBar({ betExpTime, timerKey });
+const TurnTimerBar = ({ playerPlace, isTurn }: TurnTimerBarProps) => {
+  const betExpTime = usePlayerBetExpTime(playerPlace);
+  const timerKey = useTurnTimer({ isTurn, betExpTime, playerPlace });
+  const { timeLeft, totalTime } = useTurnTimerBar({
+    betExpTime,
+    timerKey,
+    isActive: isTurn,
+  });
 
-  if (totalTime <= 0) {
+  if (!isTurn || totalTime <= 0) {
     return null;
   }
 
@@ -29,7 +37,7 @@ const TurnTimerBar = ({ betExpTime = 0, timerKey }: TurnTimerBarProps) => {
     <div className="w-full max-w-md mx-auto">
       <div className="w-full h-1 bg-gray-700 rounded-full overflow-hidden">
         <div
-          key={String(timerKey ?? `${totalTime}-${betExpTime}`)}
+          key={String(timerKey)}
           className={`h-full ${barColor} transition-all duration-1000 ease-linear`}
           style={{ width: `${percent}%` }}
         />
