@@ -150,16 +150,16 @@ const Player = memo(
                 ? "border-amber-300/70 border-t-2 border-t-amber-300 bg-gradient-to-b from-amber-400/25 via-zinc-800/95 to-zinc-900/95 shadow-amber-950/40"
                 : isTurn
                   ? "border-emerald-300/70 border-t-2 border-t-emerald-300 bg-gradient-to-b from-emerald-400/25 via-zinc-800/95 to-zinc-900/95 shadow-emerald-950/40 ring-1 ring-emerald-400/30"
-                  : "border-white/20 border-t-2 border-t-emerald-400/70 bg-gradient-to-b from-white/[0.12] via-zinc-800/95 to-zinc-900/95 shadow-black/40"
+                  : "border-zinc-800 border-t-2 border-t-amber-400/70 bg-gradient-to-b from-amber-400/15 via-zinc-800/95 to-zinc-900/95 shadow-black/40"
             }`}
           >
-            <div className="truncate border-b border-white/15 bg-white/[0.06] px-2 py-1.5 text-xs font-semibold text-white">
+            <div className="truncate border-b border-zinc-700/80 bg-black/20 px-2 py-1.5 text-xs font-semibold text-amber-100">
               {player.profile.name}
             </div>
             {isTurn && (
               <TurnTimerBar betExpTime={betExpTime} timerKey={timerKey} />
             )}
-            <div className="bg-white/[0.06] px-3 py-1.5">
+            <div className="bg-black/20 px-3 py-1.5">
               <div className="flex items-center justify-center text-sm font-bold text-amber-300 drop-shadow-[0_1px_4px_rgba(251,191,36,0.25)]">
                 {player.stack} {currency}
               </div>
